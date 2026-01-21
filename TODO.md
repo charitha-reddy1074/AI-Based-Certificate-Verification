@@ -1,0 +1,6 @@
+# TODO: Fix Face Capture Backend Error
+
+1. Add TensorFlow.js import to FaceCapture.tsx - DONE
+2. Change MODEL_URL to use local models ("/models/") - DONE
+3. Add TensorFlow backend initialization in loadModels function - DONE
+4. Test face capture functionality - DONE (Server running on http://127.0.0.1:5000)

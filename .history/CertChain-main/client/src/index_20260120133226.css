@@ -1,0 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light Theme - Navy Blue */
+  --background: 210 40% 98%;      /* Very Light Blue-Gray #FAFBFC */
+  --foreground: 217 19% 12%;      /* Dark Blue-Gray #1A202C */
+
+  --primary: 217 49% 23%;         /* Navy Blue #1E3A8A */
+  --primary-foreground: 210 40% 98%;  /* Light text on primary */
+
+  --secondary: 222 47% 11%;       /* Dark Blue-Gray #1E293B */
+  --secondary-foreground: 210 40% 97%; /* Light text on secondary */
+
+  --muted: 210 14% 96%;           /* Very Light Gray #F8FAFC */
+  --muted-foreground: 215 16% 47%;    /* Medium Gray #64748B */
+
+  --accent: 217 49% 23%;          /* Navy Blue #1E3A8A */
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 84% 60%;       /* Red #EF4444 */
+  --destructive-foreground: 210 40% 98%; /* Light text on destructive */
+
+  --border: 214 32% 91%;          /* Light Border #E2E8F0 */
+  --input: 210 40% 98%;           /* Light Input #FAFBFC */
+  --ring: 217 49% 23%;
+
+  --radius: 0.5rem;
+
+  --font-sans: 'Inter', sans-serif;
+  --font-serif: 'Inter', sans-serif;
+  --font-mono: 'Inter', monospace;
+}
+
+.dark {
+  /* Dark Theme - Dark Navy Blue */
+  --background: 217 39% 11%;      /* Deep Dark Blue-Gray #1C2838 */
+  --foreground: 210 40% 97%;      /* Light Text #F5F8FC */
+
+  --primary: 217 49% 23%;         /* Navy Blue #1E3A8A */
+  --primary-foreground: 210 40% 98%;  /* Light text on primary */
+
+  --secondary: 222 47% 11%;       /* Dark Blue-Gray #1E293B */
+  --secondary-foreground: 210 40% 97%; /* Light text on secondary */
+
+  --muted: 217 32% 20%;           /* Dark Gray #2D3E52 */
+  --muted-foreground: 215 20% 65%;    /* Light Gray #94A3B8 */
+
+  --accent: 217 49% 23%;          /* Navy Blue #1E3A8A */
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 84% 60%;       /* Red #EF4444 */
+  --destructive-foreground: 210 40% 98%; /* Light text on destructive */
+
+  --border: 217 32% 30%;          /* Dark Border #3A4A5E */
+  --input: 217 32% 18%;           /* Dark Input #252F3F */
+  --ring: 217 49% 23%;
+
+  --radius: 0.5rem;
+
+  --font-sans: 'Inter', sans-serif;
+  --font-serif: 'Inter', sans-serif;
+  --font-mono: 'Inter', monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-sans);
+    @apply tracking-tight font-bold text-primary;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-xl;
+  }
+}
+
+/* Certificate specific styles */
+.certificate-pattern {
+  background-image: radial-gradient(var(--primary) 0.5px, transparent 0.5px);
+  background-size: 10px 10px;
+  opacity: 0.05;
+}
