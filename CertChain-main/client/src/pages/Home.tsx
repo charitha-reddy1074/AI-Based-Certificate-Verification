@@ -7,25 +7,23 @@ import { ShieldCheck, GraduationCap, Lock, ArrowRight, CheckCircle, Zap } from "
 export default function Home() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Navbar */}
-      <nav className="border-b border-border bg-background/95 backdrop-blur sticky top-0 z-50">
+      {/* Modern Gradient Navbar */}
+      <nav className="bg-gradient-to-r from-background via-primary/5 to-background border-b border-primary/10 backdrop-blur sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary text-background flex items-center justify-center">
-              <GraduationCap className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+              <GraduationCap className="w-6 h-6 text-background" />
             </div>
-            <span className="font-display font-bold text-xl text-primary tracking-tight">
-              AI Based Decentralised Academic Credential Verification System
-            </span>
+            <span className="font-bold text-lg text-primary tracking-tight">🎓 Credential Verification</span>
           </div>
           <div className="flex gap-4 items-center">
             <ThemeToggle />
             <Link href="/login">
-              <Button variant="ghost" className="font-medium text-foreground hover:bg-background">Login</Button>
+              <Button variant="ghost" className="font-medium text-foreground hover:bg-primary/10">🔐 Login</Button>
             </Link>
             <Link href="/signup">
-              <Button className="font-medium bg-primary text-background hover:bg-primary/90">
-                Get Started
+              <Button className="font-medium bg-gradient-to-r from-primary to-secondary text-background hover:opacity-90">
+                📝 Get Started
               </Button>
             </Link>
           </div>
@@ -121,41 +119,42 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gradient-to-r from-background via-muted/20 to-background border-t border-border py-16">
+      <footer className="bg-gradient-to-r from-background via-muted/10 to-background border-t border-primary/10 py-12 w-full">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8 mb-12">
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
-              <div className="flex items-center gap-2 text-primary font-display font-bold text-lg mb-4">
+              <div className="flex items-center gap-2 text-primary font-bold text-lg mb-4">
                 <GraduationCap className="w-6 h-6" />
-                AI Based Decentralised Academic Credential Verification System
+                AI Credential Verification
               </div>
               <p className="text-muted-foreground text-sm">Secure academic credential verification powered by blockchain.</p>
             </div>
             <div>
-              <h4 className="font-semibold text-foreground mb-4">Product</h4>
+              <h4 className="font-semibold text-foreground mb-4">📱 Product</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/login" className="hover:text-primary transition">Login</Link></li>
-                <li><Link href="/signup" className="hover:text-primary transition">Sign Up</Link></li>
+                <li><Link href="/login" className="hover:text-primary transition">🔐 Login</Link></li>
+                <li><Link href="/signup" className="hover:text-primary transition">📝 Sign Up</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-foreground mb-4">Features</h4>
+              <h4 className="font-semibold text-foreground mb-4">⭐ Features</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Blockchain Security</li>
-                <li>Face Recognition MFA</li>
-                <li>Instant Verification</li>
+                <li className="hover:text-primary transition cursor-pointer">🔗 Blockchain Security</li>
+                <li className="hover:text-primary transition cursor-pointer">👤 Face Recognition MFA</li>
+                <li className="hover:text-primary transition cursor-pointer">⚡ Instant Verification</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-foreground mb-4">About</h4>
+              <h4 className="font-semibold text-foreground mb-4">🏢 Company</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Academic Verification System</li>
-                <li>Built by Example University</li>
+                <li className="hover:text-primary transition cursor-pointer">📚 About Us</li>
+                <li className="hover:text-primary transition cursor-pointer">🤝 Partners</li>
+                <li className="hover:text-primary transition cursor-pointer">📧 Contact</li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-border pt-8 text-center">
-            <p className="text-muted-foreground">© 2024 AI Based Decentralised Academic Credential Verification System. All rights reserved. | Built with by Example University</p>
+          <div className="border-t border-primary/10 pt-8 text-center">
+            <p className="text-muted-foreground text-sm">© 2026 AI-Based Credential Verification System. Built with ❤️ | All rights reserved</p>
           </div>
         </div>
       </footer>

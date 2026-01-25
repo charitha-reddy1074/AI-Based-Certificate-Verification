@@ -4,6 +4,7 @@
   "description": "Blockchain contracts for CertChain",
   "main": "index.js",
   "scripts": {
+    "dev": "cd CertChain-main && npm run dev",
     "compile": "hardhat compile",
     "test": "hardhat test",
     "deploy": "hardhat run scripts/deploy.js"

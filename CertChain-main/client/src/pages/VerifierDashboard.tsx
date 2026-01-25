@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { CertificateCard } from "@/components/CertificateCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Search, Loader2, LogOut, Lock, GraduationCap } from "lucide-react";
+import { Search, Loader2, LogOut, Lock, GraduationCap, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function VerifierDashboard() {
@@ -32,31 +32,56 @@ export default function VerifierDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="bg-primary text-background sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-background/20 flex items-center justify-center">
-              <Search className="w-6 h-6" />
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-slate-900/5 flex flex-col">
+      <header className="bg-gradient-to-r from-primary via-primary/90 to-blue-600 text-background p-8 shadow-2xl sticky top-0 z-40 backdrop-blur-lg border-b border-primary/20">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center">
+            <motion.div 
+              className="flex items-center gap-4"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+            >
+              <div className="relative">
+                <div className="absolute inset-0 bg-white/30 rounded-xl blur-lg"></div>
+                <div className="relative w-12 h-12 rounded-xl bg-white/20 backdrop-blur-xl flex items-center justify-center border border-white/30">
+                  <Shield className="w-7 h-7 text-white" />
+                </div>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white">Verifier Portal</h1>
+                <p className="text-sm text-white/70 mt-1">{user?.company}</p>
+              </div>
+            </motion.div>
+            <div className="flex items-center gap-4">
+              <ThemeToggle />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => logout.mutate()} 
+                className="border-white/30 text-white hover:bg-white/20 backdrop-blur-xl transition-all duration-300 font-medium"
+              >
+                <LogOut className="w-4 h-4 mr-2" /> 
+                Logout
+              </Button>
             </div>
-            <div>
-              <div className="font-display font-bold text-lg">Verifier Portal</div>
-              <p className="text-sm text-background/80">{user?.company}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <ThemeToggle />
-            <Button variant="outline" size="sm" onClick={() => logout.mutate()} className="border-background text-background hover:bg-background/20">
-              <LogOut className="w-4 h-4 mr-2" /> Logout
-            </Button>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-8 space-y-12">
+      <main className="flex-1 max-w-7xl mx-auto w-full p-8 space-y-12">
         {/* Search Section */}
         <section className="max-w-2xl mx-auto text-center space-y-6">
-          <h2 className="text-3xl font-display font-bold text-primary">Verify Academic Credentials</h2>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <h2 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600 flex items-center gap-3 justify-center">
+              <Search className="w-8 h-8 text-primary" />
+              Verify Academic Credentials
+            </h2>
+            <p className="text-muted-foreground mt-2">Search and unlock certificates with instant verification</p>
+          </motion.div>
           <form onSubmit={handleSearch} className="flex gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3.5 text-muted-foreground w-5 h-5" />
@@ -152,44 +177,65 @@ export default function VerifierDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Footer */}
-      <footer className="bg-gradient-to-r from-background via-muted/20 to-background border-t border-border mt-12 py-12">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="flex items-center gap-2 text-primary font-display font-bold text-lg mb-4">
-                <GraduationCap className="w-6 h-6" />
-                AI Based Decentralised Academic Credential Verification System
-              </div>
-              <p className="text-muted-foreground text-sm">Verify academic credentials instantly.</p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-foreground mb-4">Features</h4>
+      <footer className="bg-gradient-to-r from-background via-muted/10 to-background border-t border-primary/10 mt-12 py-12 w-full">
+        <div className="max-w-7xl mx-auto px-8">
+          <motion.div 
+            className="grid md:grid-cols-4 gap-8 mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0 }}
+            >
+              <h4 className="font-semibold text-foreground mb-4">Verification</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Instant Verification</li>
-                <li>QR Code Scanning</li>
-                <li>Blockchain Validation</li>
+                <li className="hover:text-primary transition cursor-pointer">✅ Instant Verification</li>
+                <li className="hover:text-primary transition cursor-pointer">📱 QR Code Scanning</li>
+                <li className="hover:text-primary transition cursor-pointer">⛓️ Blockchain Validation</li>
               </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-foreground mb-4">Support</h4>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+            >
+              <h4 className="font-semibold text-foreground mb-4">Resources</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="hover:text-primary transition cursor-pointer">Documentation</li>
-                <li className="hover:text-primary transition cursor-pointer">Help Center</li>
-                <li className="hover:text-primary transition cursor-pointer">Contact Us</li>
+                <li className="hover:text-primary transition cursor-pointer">📚 Documentation</li>
+                <li className="hover:text-primary transition cursor-pointer">❓ Help Center</li>
+                <li className="hover:text-primary transition cursor-pointer">💬 Contact</li>
               </ul>
-            </div>
-            <div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+            >
+              <h4 className="font-semibold text-foreground mb-4">Company</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="hover:text-primary transition cursor-pointer">📄 About</li>
+                <li className="hover:text-primary transition cursor-pointer">🤝 Partners</li>
+                <li className="hover:text-primary transition cursor-pointer">📝 Blog</li>
+              </ul>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.3 }}
+            >
               <h4 className="font-semibold text-foreground mb-4">Legal</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="hover:text-primary transition cursor-pointer">Privacy Policy</li>
-                <li className="hover:text-primary transition cursor-pointer">Terms of Service</li>
-                <li className="hover:text-primary transition cursor-pointer">Security</li>
+                <li className="hover:text-primary transition cursor-pointer">🔐 Privacy</li>
+                <li className="hover:text-primary transition cursor-pointer">⚖️ Terms</li>
+                <li className="hover:text-primary transition cursor-pointer">🛡️ Security</li>
               </ul>
-            </div>
-          </div>
-          <div className="border-t border-border pt-8 text-center">
-            <p className="text-muted-foreground">© 2024 AI Based Decentralised Academic Credential Verification System Verifier. Built by Example University | All rights reserved</p>
+            </motion.div>
+          </motion.div>
+          <div className="border-t border-primary/10 pt-8 text-center">
+            <p className="text-muted-foreground text-sm">© 2026 AI-Based Credential Verification System. Built with ❤️ | All rights reserved</p>
           </div>
         </div>
       </footer>

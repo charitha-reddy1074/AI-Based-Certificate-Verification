@@ -1,9 +1,10 @@
 
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage, initStorage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
+import { generateCertificatePDF } from "./certificatePdfService";
 import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
@@ -22,25 +23,68 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  try {
+    console.log('🔐 Comparing passwords...');
+    console.log('   Stored format:', stored.substring(0, 50) + '...');
+    
+    const [hashed, salt] = stored.split(".");
+    if (!hashed || !salt) {
+      console.error('❌ Invalid stored password format. Stored:', stored);
+      return false;
+    }
+    
+    console.log('   Hash length:', hashed.length, 'Salt length:', salt.length);
+    
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    
+    console.log('   Stored hash length:', hashedBuf.length);
+    console.log('   Supplied hash length:', suppliedBuf.length);
+    
+    const result = timingSafeEqual(hashedBuf, suppliedBuf);
+    console.log('   Match result:', result);
+    return result;
+  } catch (err) {
+    console.error('❌ Password comparison error:', err);
+    return false;
+  }
 }
 
 function euclideanDistance(desc1: number[], desc2: number[]): number {
-  if (desc1.length !== desc2.length) return 1.0;
+  // Validate inputs
+  if (!Array.isArray(desc1) || !Array.isArray(desc2)) {
+    console.warn('Invalid descriptor type:', typeof desc1, typeof desc2);
+    return 1.0;
+  }
+  
+  if (desc1.length !== desc2.length) {
+    console.warn(`Descriptor length mismatch: ${desc1.length} vs ${desc2.length}`);
+    return 1.0;
+  }
+  
+  if (desc1.length === 0) {
+    console.warn('Empty descriptors');
+    return 1.0;
+  }
+  
   let sum = 0;
   for (let i = 0; i < desc1.length; i++) {
-    sum += (desc1[i] - desc2[i]) ** 2;
+    const diff = (desc1[i] || 0) - (desc2[i] || 0);
+    sum += diff * diff;
   }
-  return Math.sqrt(sum);
+  
+  const distance = Math.sqrt(sum);
+  console.log(`✓ Face match distance: ${distance.toFixed(4)} (threshold: 0.6)`);
+  return distance;
 }
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // Initialize database connection first
+  await initStorage();
+
   // --- Session Setup ---
   app.use(
     session({
@@ -61,14 +105,26 @@ export async function registerRoutes(
       async (email, password, done) => {
         try {
           const user = await storage.getUserByEmail(email);
-          if (!user || !(await comparePasswords(password, user.password))) {
+          if (!user) {
+            console.warn(`Login attempt for non-existent user: ${email}`);
             return done(null, false, { message: "Invalid email or password" });
           }
+          
+          const passwordMatch = await comparePasswords(password, user.password);
+          if (!passwordMatch) {
+            console.warn(`Invalid password for user: ${email}`);
+            return done(null, false, { message: "Invalid email or password" });
+          }
+          
           if (!user.isApproved && user.role !== 'admin') {
+            console.warn(`Login attempt for unapproved user: ${email}`);
             return done(null, false, { message: "Account pending admin approval" });
           }
+          
+          console.log(`✓ Login successful for user: ${email}`);
           return done(null, user);
         } catch (err) {
+          console.error('Passport strategy error:', err);
           return done(err);
         }
       }
@@ -87,17 +143,28 @@ export async function registerRoutes(
 
 
   // --- Seed Admin User ---
-  if (await storage.getUserByEmail('admin@example.com') === undefined) {
+  try {
+    const existingAdmin = await storage.getUserByEmail('admin@example.com');
     const hashedPassword = await hashPassword('Admin@2026');
-    await storage.createUser({
-      email: 'admin@example.com',
-      password: hashedPassword,
-      role: 'admin',
-      fullName: 'System Admin',
-      isApproved: true,
-      // Optional fields can be null/undefined
-    });
-    console.log('Admin user seeded');
+    
+    if (!existingAdmin) {
+      await storage.createUser({
+        email: 'admin@example.com',
+        password: hashedPassword,
+        role: 'admin',
+        fullName: 'System Admin',
+        isApproved: true,
+      });
+      console.log('✅ Admin user created with password: Admin@2026');
+    } else {
+      // Update existing admin with fresh password hash
+      await storage.updateUser('admin@example.com', {
+        password: hashedPassword,
+      });
+      console.log('✅ Admin password reset to: Admin@2026');
+    }
+  } catch (err) {
+    console.log('ℹ️  Admin user seed error:', (err as Error).message);
   }
 
   // --- API Routes ---
@@ -115,9 +182,16 @@ export async function registerRoutes(
           return res.status(401).json({ message: "Face verification required" });
         }
         
+        // Validate descriptor is array of numbers
+        if (!Array.isArray(faceDescriptor) || faceDescriptor.some(v => typeof v !== 'number')) {
+          console.warn('Invalid face descriptor format');
+          return res.status(401).json({ message: "Invalid face descriptor format" });
+        }
+        
+        console.log(`\nFace verification for user: ${user.email}`);
+        console.log(`Incoming descriptor length: ${faceDescriptor.length}`);
+        
         // Check against stored descriptors
-        // stored is array of descriptors (which are arrays of numbers)
-        // or just one descriptor? Schema says jsonb.
         let storedDescriptors = user.faceDescriptors as any;
         
         if (!storedDescriptors) {
@@ -130,20 +204,35 @@ export async function registerRoutes(
         }
 
         if (!Array.isArray(storedDescriptors) || storedDescriptors.length === 0) {
+           console.error('Invalid stored descriptors:', storedDescriptors);
            return res.status(401).json({ message: "Invalid face data" });
         }
 
+        console.log(`Checking against ${storedDescriptors.length} stored descriptor(s)`);
+
         // Check if ANY stored descriptor matches the login descriptor
         let match = false;
-        for (const stored of storedDescriptors) {
+        let bestDistance = 1.0;
+        
+        for (let i = 0; i < storedDescriptors.length; i++) {
+          const stored = storedDescriptors[i];
           // Ensure stored is array
-          if (Array.isArray(stored) && euclideanDistance(stored, faceDescriptor) < 0.6) { 
-            match = true;
-            break;
+          if (Array.isArray(stored)) {
+            const distance = euclideanDistance(stored, faceDescriptor);
+            bestDistance = Math.min(bestDistance, distance);
+            
+            if (distance < 0.6) {
+              match = true;
+              console.log(`✓ Face match found at index ${i}`);
+              break;
+            }
+          } else {
+            console.warn(`Stored descriptor at index ${i} is not an array:`, typeof stored);
           }
         }
 
         if (!match) {
+          console.log(`✗ Face verification failed. Best distance: ${bestDistance.toFixed(4)} (threshold: 0.6)`);
           return res.status(401).json({ message: "Face verification failed" });
         }
       }
@@ -159,6 +248,20 @@ export async function registerRoutes(
   app.post(api.auth.signup.path, async (req, res) => {
     try {
       const input = api.auth.signup.input.parse(req.body);
+      
+      // Validate face descriptor if student
+      if (input.role === 'student' && input.faceDescriptor) {
+        if (!Array.isArray(input.faceDescriptor)) {
+          return res.status(400).json({ message: "Face descriptor must be an array of numbers" });
+        }
+        if (input.faceDescriptor.length !== 128) {
+          console.warn(`Warning: Face descriptor length is ${input.faceDescriptor.length}, expected 128`);
+        }
+        if (input.faceDescriptor.some(v => typeof v !== 'number')) {
+          return res.status(400).json({ message: "Face descriptor must contain only numbers" });
+        }
+        console.log(`✓ Signup: Received valid face descriptor (length: ${input.faceDescriptor.length})`);
+      }
       
       const existing = await storage.getUserByEmail(input.email);
       if (existing) {
@@ -184,8 +287,21 @@ export async function registerRoutes(
         password: hashedPassword,
         role: role as "admin" | "student" | "verifier",
         isApproved,
+        faceDescriptors: input.faceDescriptor ? [input.faceDescriptor] : null,
       });
 
+      // Log signup activity
+      await (storage as any).logActivity(
+        'signup',
+        user.id,
+        user.fullName,
+        user.email,
+        role,
+        `New ${role} user registered`,
+        { method: 'email_password', hasface: !!input.faceDescriptor }
+      );
+
+      console.log(`✓ User created: ${user.email} (role: ${role})`);
       res.status(201).json(user);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -221,6 +337,19 @@ export async function registerRoutes(
   app.post(api.admin.approveUser.path, async (req, res) => {
     if (!req.isAuthenticated() || (req.user as any).role !== 'admin') return res.status(401).json({ message: "Unauthorized" });
     const user = await storage.updateUserApproval(Number(req.params.id as string), true);
+    
+    // Log approval activity
+    const admin = req.user as any;
+    await (storage as any).logActivity(
+      'approval',
+      admin.id,
+      admin.fullName,
+      admin.email,
+      'admin',
+      `Approved ${user.role} account: ${user.fullName}`,
+      { approvedUserId: user.id, approvedUserEmail: user.email, approvedUserRole: user.role }
+    );
+    
     res.json(user);
   });
 
@@ -229,33 +358,96 @@ export async function registerRoutes(
 
     const input = api.admin.issueCertificate.input.parse(req.body);
 
+    // Check for existing certificate with same roll number
+    const existingCerts = await storage.getCertificateByRollNumber(input.rollNumber);
+    if (existingCerts && existingCerts.length > 0) {
+      const existingCert = existingCerts[0];
+      return res.status(409).json({ 
+        message: "Certificate already exists for this roll number",
+        existingCertificateId: existingCert.id,
+        existingCertificate: existingCert
+      });
+    }
+
     // Simulate Blockchain Hash
     const blockHash = "0x" + Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join("");
     const previousHash = "0x" + Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join("");
+    const txHash = "0x" + Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join("");
 
     const cert = await storage.createCertificate({
       ...input,
       blockHash,
-      previousHash
+      previousHash,
+      txHash
     });
 
+    // Log certificate issuance activity
+    const admin = req.user as any;
+    await (storage as any).logActivity(
+      'certificate_issued',
+      admin.id,
+      admin.fullName,
+      admin.email,
+      'admin',
+      `Issued certificate to ${input.name} (${input.rollNumber})`,
+      { certificateId: cert.id, studentId: input.studentId, rollNumber: input.rollNumber, txHash: cert.txHash }
+    );
+
     res.status(201).json(cert);
+  });
+
+  // Download Certificate PDF
+  app.get("/api/admin/certificate/:id/download", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
+      
+      const certId = req.params.id as string;
+      const cert = await storage.getCertificateById(Number(certId));
+      
+      if (!cert) {
+        return res.status(404).json({ message: "Certificate not found" });
+      }
+
+      const pdfBuffer = await generateCertificatePDF(cert);
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="Certificate-${cert.rollNumber}.pdf"`);
+      res.setHeader('Content-Length', pdfBuffer.length);
+      
+      res.send(pdfBuffer);
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      res.status(500).json({ message: "Failed to generate certificate PDF" });
+    }
   });
 
   app.get(api.admin.analytics.path, async (req, res) => {
     if (!req.isAuthenticated() || (req.user as any).role !== 'admin') return res.status(401).json({ message: "Unauthorized" });
     
-    const totalUsers = await storage.getAllUsers().then(users => users.length);
+    const allUsers = await storage.getAllUsers();
+    const totalUsers = allUsers.length;
+    const totalStudents = allUsers.filter(u => u.role === 'student').length;
+    const totalVerifiers = allUsers.filter(u => u.role === 'verifier').length;
     const pendingApprovals = await storage.getPendingUsers().then(users => users.length);
     const allCerts = storage.getAllCertificates ? await storage.getAllCertificates() : [];
     const certificatesIssued = Array.isArray(allCerts) ? allCerts.length : 0;
     const verificationRate = certificatesIssued > 0 ? 98.5 : 0;
     
+    // Get recent activity, payments, and access logs
+    const recentActivity = await (storage as any).getRecentActivity(10);
+    const recentPayments = await (storage as any).getRecentPayments(10);
+    const accessLogs = await (storage as any).getAccessLogs(10);
+    
     res.json({
       totalUsers,
+      totalStudents,
+      totalVerifiers,
       pendingApprovals,
       certificatesIssued,
-      verificationRate
+      verificationRate,
+      recentActivity: recentActivity || [],
+      recentPayments: recentPayments || [],
+      accessLogs: accessLogs || []
     });
   });
 
@@ -283,13 +475,32 @@ export async function registerRoutes(
     }
 
     // Now TS knows rollNumber is a string
-    const cert = await storage.getCertificateByRollNumber(rollNumber);
+    const certs = await storage.getCertificateByRollNumber(rollNumber);
 
-    if (!cert) {
+    if (!certs || certs.length === 0) {
       return res.status(404).json({ message: "Certificate not found in database." });
     }
 
-    res.json(cert);
+    const cert = certs[0]; // Get first (most recent) certificate
+    
+    // Log access to certificate
+    const verifier = req.user as any;
+    const student = await storage.getUser(cert.studentId);
+    if (student) {
+      await (storage as any).logAccess(
+        verifier.id,
+        verifier.fullName,
+        verifier.email,
+        cert.id,
+        student.id,
+        student.fullName,
+        student.email,
+        'searched',
+        (req.ip || req.connection.remoteAddress) as string
+      );
+    }
+
+    res.json(certs);
   });
 
   app.post(api.verifier.unlock.path, async (req, res) => {
@@ -297,6 +508,26 @@ export async function registerRoutes(
     const { certificateId } = req.body;
 
     const unlock = await storage.createUnlock((req.user as any).id, certificateId as number);
+    
+    // Log payment for accessing certificate
+    const verifier = req.user as any;
+    const cert = await storage.getCertificate(certificateId);
+    const student = cert ? await storage.getUser(cert.studentId) : null;
+    
+    if (cert && student) {
+      await (storage as any).logPayment(
+        verifier.id,
+        verifier.fullName,
+        verifier.email,
+        cert.id,
+        cert.name,
+        student.id,
+        student.fullName,
+        student.rollNumber || 'N/A',
+        10 // Standard payment amount
+      );
+    }
+    
     res.status(201).json(unlock);
   });
 

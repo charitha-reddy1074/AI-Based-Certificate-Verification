@@ -15,7 +15,7 @@ export const api = {
       input: z.object({ email: z.string().email(), password: z.string(), faceDescriptor: z.array(z.number()).optional() }),
       responses: { 200: z.custom<typeof users.$inferSelect>(), 401: errorSchemas.unauthorized },
     },
-    signup: { method: 'POST' as const, path: '/api/auth/signup', input: insertUserSchema, responses: { 201: z.custom<typeof users.$inferSelect>(), 400: errorSchemas.validation } },
+    signup: { method: 'POST' as const, path: '/api/auth/signup', input: insertUserSchema.extend({ faceDescriptor: z.array(z.number()).optional() }), responses: { 201: z.custom<typeof users.$inferSelect>(), 400: errorSchemas.validation } },
     logout: { method: 'POST' as const, path: '/api/auth/logout', responses: { 200: z.object({ message: z.string() }) } },
     me: { method: 'GET' as const, path: '/api/auth/me', responses: { 200: z.custom<typeof users.$inferSelect>(), 401: z.null() } },
   },
@@ -23,7 +23,45 @@ export const api = {
     pendingUsers: { method: 'GET' as const, path: '/api/admin/users/pending', responses: { 200: z.array(z.custom<typeof users.$inferSelect>()) } },
     approveUser: { method: 'POST' as const, path: '/api/admin/users/:id/approve', responses: { 200: z.custom<typeof users.$inferSelect>() } },
     issueCertificate: { method: 'POST' as const, path: '/api/admin/certificates', input: insertCertificateSchema, responses: { 201: z.custom<typeof certificates.$inferSelect>() } },
-    analytics: { method: 'GET' as const, path: '/api/admin/analytics', responses: { 200: z.object({ totalUsers: z.number(), pendingApprovals: z.number(), certificatesIssued: z.number(), verificationRate: z.number() }) } },
+    analytics: { 
+      method: 'GET' as const, 
+      path: '/api/admin/analytics', 
+      responses: { 
+        200: z.object({ 
+          totalUsers: z.number(),
+          totalStudents: z.number(),
+          totalVerifiers: z.number(),
+          pendingApprovals: z.number(),
+          certificatesIssued: z.number(),
+          verificationRate: z.number(),
+          recentActivity: z.array(z.object({
+            id: z.string(),
+            type: z.enum(['signup', 'approval', 'certificate_issued', 'verification']),
+            user: z.object({ id: z.any(), fullName: z.string(), email: z.string(), role: z.string() }),
+            description: z.string(),
+            timestamp: z.string(),
+            details: z.record(z.any()).optional()
+          })),
+          recentPayments: z.array(z.object({
+            id: z.string(),
+            verifier: z.object({ id: z.any(), fullName: z.string(), email: z.string() }),
+            certificate: z.object({ id: z.any(), name: z.string(), studentId: z.number() }),
+            amount: z.number(),
+            timestamp: z.string(),
+            certificateDetails: z.object({ studentName: z.string(), rollNumber: z.string() }).optional()
+          })),
+          accessLogs: z.array(z.object({
+            id: z.string(),
+            verifier: z.object({ id: z.any(), fullName: z.string(), email: z.string() }),
+            certificateId: z.any(),
+            studentInfo: z.object({ id: z.any(), fullName: z.string(), email: z.string() }),
+            accessTime: z.string(),
+            action: z.string(),
+            ipAddress: z.string().optional()
+          }))
+        }) 
+      } 
+    },
   },
   student: { myCertificates: { method: 'GET' as const, path: '/api/student/certificates', responses: { 200: z.array(z.custom<typeof certificates.$inferSelect>()) } } },
   verifier: {

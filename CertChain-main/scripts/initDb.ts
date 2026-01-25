@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { sql } from "drizzle-orm";
 import { Pool } from "pg";
-import * as schema from "@shared/schema";
+import * as schema from "../shared/schema";
 import "dotenv/config";
 
 const dbUrl = process.env.DATABASE_URL || "postgresql://postgres:12345678@localhost:5432/CertChain_db";

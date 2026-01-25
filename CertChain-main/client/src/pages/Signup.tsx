@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FaceCapture } from "@/components/FaceCapture";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Loader2, AlertCircle, CheckCircle, GraduationCap } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle, GraduationCap, ChevronLeft } from "lucide-react";
 
 export default function Signup() {
   const { signup } = useAuth();
@@ -51,20 +51,30 @@ export default function Signup() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Simple Header */}
-      <header className="bg-gradient-to-r from-primary/10 to-secondary/10 border-b border-border/50">
+      {/* Modern Gradient Header */}
+      <header className="bg-gradient-to-r from-background via-primary/5 to-background border-b border-primary/10">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link href="/">
             <div className="flex items-center gap-2 cursor-pointer group">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                 <GraduationCap className="w-6 h-6 text-background" />
               </div>
-              <span className="font-display font-bold text-xl text-primary group-hover:text-secondary transition">AI Based Decentralised Academic Credential Verification System</span>
+              <span className="font-bold text-lg text-primary group-hover:text-secondary transition">🎓 Credential Verification</span>
             </div>
           </Link>
-          <ThemeToggle />
+          <div className="flex items-center gap-4">
+            <Link href="/">
+              <Button variant="ghost" size="sm" className="text-foreground hover:bg-primary/10">
+                <ChevronLeft className="w-4 h-4 mr-1" />
+                Back
+              </Button>
+            </Link>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
+
+      {/* Signup Content */}
 
       {/* Signup Content */}
       <div className="flex-1 py-12 flex items-center justify-center px-4">
@@ -282,11 +292,11 @@ export default function Signup() {
         </Card>
       </div>
 
-      {/* Simple Footer */}
-      <footer className="border-t border-border bg-background/50 py-6">
+      {/* Modern Footer */}
+      <footer className="bg-gradient-to-r from-background via-muted/10 to-background border-t border-primary/10 py-8">
         <div className="max-w-7xl mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>Already have an account? <Link href="/login" className="text-primary hover:text-secondary transition font-semibold">Sign in</Link></p>
-          <p className="mt-3">© 2024 AI Based Decentralised Academic Credential Verification System. Built by Example University</p>
+          <p>Already have an account? <Link href="/login" className="text-primary hover:text-secondary transition font-semibold">🔐 Sign in</Link></p>
+          <p className="mt-3">© 2026 AI-Based Credential Verification System. Built with ❤️</p>
         </div>
       </footer>
     </div>

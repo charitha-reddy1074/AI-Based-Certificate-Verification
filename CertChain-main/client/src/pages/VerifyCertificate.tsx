@@ -3,7 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { CertificateCard } from "@/components/CertificateCard";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Loader2, CheckCircle, XCircle, Home, Database, Blocks } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Home, Database, Blocks, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Certificate } from "@shared/schema";
@@ -267,35 +267,60 @@ export default function VerifyCertificate() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-slate-900/5 flex flex-col">
       {/* Header */}
-      <header className="bg-gradient-to-r from-background to-background border-b border-border sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary text-background flex items-center justify-center">
-              <CheckCircle className="w-6 h-6" />
+      <header className="bg-gradient-to-r from-primary via-primary/90 to-blue-600 text-background p-8 shadow-2xl sticky top-0 z-40 backdrop-blur-lg border-b border-primary/20">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center">
+            <motion.div 
+              className="flex items-center gap-4"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+            >
+              <div className="relative">
+                <div className="absolute inset-0 bg-white/30 rounded-xl blur-lg"></div>
+                <div className="relative w-12 h-12 rounded-xl bg-white/20 backdrop-blur-xl flex items-center justify-center border border-white/30">
+                  <CheckCircle className="w-7 h-7 text-white" />
+                </div>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white">Verify Certificate</h1>
+                <p className="text-sm text-white/70 mt-1">Public Verification Service</p>
+              </div>
+            </motion.div>
+            <div className="flex items-center gap-4">
+              <ThemeToggle />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setLocation("/")} 
+                className="border-white/30 text-white hover:bg-white/20 backdrop-blur-xl transition-all duration-300 font-medium"
+              >
+                <Home className="w-4 h-4 mr-2" /> 
+                Home
+              </Button>
             </div>
-            <div>
-              <h1 className="font-bold text-foreground text-lg">Certificate Verification</h1>
-              <p className="text-xs text-muted-foreground">Public Verification Service</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <ThemeToggle />
-            <Button variant="ghost" onClick={() => setLocation("/")} className="text-foreground hover:bg-primary/10">
-              <Home className="w-4 h-4 mr-2" /> Home
-            </Button>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-8">
-          <h2 className="text-4xl font-display font-bold text-primary">
-            Certificate Verification
-          </h2>
-          <p className="text-muted-foreground mt-2">Verify the authenticity of a certificate using database or blockchain</p>
-        </div>
+      <main className="flex-1 max-w-7xl mx-auto w-full p-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="mb-8"
+        >
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600 flex items-center gap-3">
+                <Zap className="w-8 h-8 text-primary" />
+                Verify Certificate Authenticity
+              </h2>
+              <p className="text-muted-foreground mt-2">Check certificate status on database or blockchain</p>
+            </div>
+          </div>
+        </motion.div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-8">
@@ -320,10 +345,10 @@ export default function VerifyCertificate() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gradient-to-r from-background via-muted/20 to-background border-t border-border py-8 mt-12">
+      <footer className="bg-gradient-to-r from-background via-muted/10 to-background border-t border-primary/10 py-8 mt-12">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <p className="text-muted-foreground text-sm">
-            © 2024 AI Based Decentralised Academic Credential Verification System Verification Service. Built by Example University | All rights reserved
+            © 2026 AI-Based Credential Verification System. Built with ❤️ | All rights reserved
           </p>
         </div>
       </footer>
