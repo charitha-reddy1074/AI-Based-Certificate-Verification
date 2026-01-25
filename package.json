@@ -5,7 +5,7 @@
   "main": "CertChain-main/dist/index.cjs",
   "scripts": {
     "dev": "cd CertChain-main && npm run dev",
-    "build": "cd CertChain-main && npm run build",
+    "build": "cd CertChain-main && npm ci --include=dev && npm run build",
     "start": "cd CertChain-main && npm start",
     "compile": "cd blockchain && hardhat compile",
     "test": "cd blockchain && hardhat test",
