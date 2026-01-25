@@ -1,0 +1,12 @@
+{
+  "extends": "./CertChain-main/tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true
+  },
+  "include": ["CertChain-main/server", "CertChain-main/shared", "CertChain-main/script"],
+  "exclude": ["node_modules", "dist", "CertChain-main/client"]
+}
