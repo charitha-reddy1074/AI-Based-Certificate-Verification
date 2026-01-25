@@ -1,1 +1,1 @@
-web: cd CertChain-main && npm install && npm run build && npm start
+web: npm ci --include=dev && cd CertChain-main && npm ci --include=dev && npm run build && npm start
