@@ -137,6 +137,11 @@ export const CertificateCard = forwardRef<HTMLDivElement, CertificateCardProps>(
               <p className="text-[10px] font-mono text-muted-foreground max-w-[200px] break-all">
                 ID: {certificate.id}
               </p>
+              {certificate.txHash && (
+                <p className="text-[8px] font-mono text-muted-foreground max-w-[200px] break-all mt-1">
+                  TX: {certificate.txHash.substring(0, 16)}...
+                </p>
+              )}
             </div>
 
             <div className="flex flex-col items-center">

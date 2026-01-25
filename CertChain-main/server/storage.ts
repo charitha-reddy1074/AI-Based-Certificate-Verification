@@ -1,5 +1,5 @@
 
-import { db } from "./db";
+import { db, initDb } from "./db";
 import { users, certificates, verifierUnlocks, type User, type Certificate, type VerifierUnlock, insertUserSchema, insertCertificateSchema } from "@shared/schema";
 import type { z } from "zod";
 
@@ -95,6 +95,7 @@ export class MemoryStorage implements IStorage {
       university: cert.university,
       qrCode: cert.qrCode,
       imageUrl: cert.imageUrl ?? null,
+      txHash: cert.txHash ?? null,
       blockHash: cert.blockHash ?? null,
       previousHash: cert.previousHash ?? null,
       createdAt: new Date(),
@@ -240,29 +241,25 @@ export class DatabaseStorage implements IStorage {
 }
 
 // Initialize storage - use memory storage if DB is unavailable
-export let storage: IStorage;
+// Start with memory storage, then try to upgrade to database
+export let storage: IStorage = new MemoryStorage();
 
 async function initStorage() {
-  // Only use database if DATABASE_URL is set AND connection succeeded
-  const useDatabase = process.env.DATABASE_URL && db;
+  try {
+    // Try to connect to database
+    const dbConnected = await initDb();
 
-  if (useDatabase) {
-    console.log("✓ Using PostgreSQL storage");
-    storage = new DatabaseStorage();
-  } else {
-    console.log("ℹ️  Using in-memory storage");
-    if (!process.env.DATABASE_URL) {
-      console.log("   → DATABASE_URL not configured");
+    if (dbConnected) {
+      console.log("✓ Upgrading to PostgreSQL storage");
+      storage = new DatabaseStorage();
+    } else {
+      console.log("ℹ️  Using in-memory storage (database unavailable)");
     }
-    if (!db) {
-      console.log("   → Database connection failed");
-    }
-    storage = new MemoryStorage();
+  } catch (err) {
+    console.error("Failed to initialize storage:", err);
+    console.log("Using in-memory storage");
   }
 }
 
-initStorage().catch(err => {
-  console.error("Failed to initialize storage:", err);
-  console.log("Falling back to in-memory storage");
-  storage = new MemoryStorage();
-});
+// Start initialization but don't wait for it
+initStorage();

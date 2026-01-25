@@ -171,11 +171,11 @@ export default function Signup() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-foreground">Roll Number</Label>
-                  <Input placeholder="2x11CS0x0xxx" className="bg-input border-border/50 text-foreground" {...register("rollNumber")} />
+                  <Input placeholder="CS2024001234" className="bg-input border-border/50 text-foreground" {...register("rollNumber")} />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-foreground">University Email</Label>
-                  <Input placeholder="@mallareddyuniversity.ac.in" className="bg-input border-border/50 text-foreground" {...register("universityEmail")} />
+                  <Input placeholder="student@example.edu" className="bg-input border-border/50 text-foreground" {...register("universityEmail")} />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-foreground">Joined Year</Label>

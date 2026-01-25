@@ -32,6 +32,7 @@ export const certificates = pgTable("certificates", {
   university: text("university").notNull(),
   qrCode: text("qr_code").notNull(),
   imageUrl: text("image_url"),
+  txHash: text("tx_hash"),
   blockHash: text("block_hash"),
   previousHash: text("previous_hash"),
   createdAt: timestamp("created_at").defaultNow(),

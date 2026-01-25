@@ -10,6 +10,7 @@ interface FaceCaptureProps {
 
 export function FaceCapture({ onCapture, label = "Capture Face" }: FaceCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [captured, setCaptured] = useState(false);
@@ -22,27 +23,23 @@ export function FaceCapture({ onCapture, label = "Capture Face" }: FaceCapturePr
   useEffect(() => {
     const loadModels = async () => {
       try {
-        console.log("Loading face-api models from CDN...");
-        // Use jsDelivr CDN for reliable model hosting
+        console.log("🤖 Loading face-api models from CDN...");
         const MODEL_URL = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/";
         
-        // Try to load models with error handling
         let modelsLoadedSuccessfully = false;
         try {
-          setLoadingProgress("Initializing face recognition...");
+          setLoadingProgress("Loading detection model...");
           
-          // Attempt to load models with timeout - use Promise.all for parallel loading
           await Promise.race([
             (async () => {
               try {
-                // Load all models in parallel for faster initialization
                 await Promise.all([
                   faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
                   faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
                   faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
                 ]);
                 
-                console.log("✓ All face-api models loaded successfully");
+                console.log("✅ All face-api models loaded successfully");
                 modelsLoadedSuccessfully = true;
               } catch (e) {
                 throw e;
@@ -51,19 +48,18 @@ export function FaceCapture({ onCapture, label = "Capture Face" }: FaceCapturePr
             new Promise((_, reject) => setTimeout(() => reject(new Error("Model loading timeout")), 30000))
           ]);
         } catch (modelError) {
-          // Model loading failed - use development/fallback mode
-          console.warn("Face models unavailable, using development mode:", modelError);
+          console.warn("⚠️  Face models failed to load, using development mode:", modelError);
           modelsLoadedSuccessfully = false;
         }
         
-        // Set states appropriately
-        setModelsLoaded(true); // Allow UI to proceed
+        console.log("📦 Models loaded status:", modelsLoadedSuccessfully);
+        setModelsLoaded(true);
         setModelsAvailable(modelsLoadedSuccessfully);
         setModelError(!modelsLoadedSuccessfully);
         setLoadingProgress("");
       } catch (err) {
-        console.error("Critical face capture error:", err);
-        setModelsLoaded(true); // Still allow proceeding
+        console.error("🔴 Critical face capture error:", err);
+        setModelsLoaded(true);
         setModelsAvailable(false);
         setModelError(true);
         setLoadingProgress("");
@@ -83,33 +79,58 @@ export function FaceCapture({ onCapture, label = "Capture Face" }: FaceCapturePr
   const startVideo = async () => {
     setError(null);
     try {
+      console.log("🎥 Starting video capture...");
       setIsCapturing(true);
+      
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           width: { ideal: 640 },
-          height: { ideal: 480 }
-        } 
+          height: { ideal: 480 },
+          facingMode: "user"
+        },
+        audio: false
       });
       
+      console.log("✓ Got media stream:", stream);
       streamRef.current = stream;
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        
+        // Wait for loadedmetadata before playing
+        videoRef.current.onloadedmetadata = async () => {
+          console.log("✓ Video metadata loaded, attempting to play...");
+          try {
+            await videoRef.current?.play();
+            console.log("✓ Video is now playing");
+          } catch (playErr) {
+            console.error("❌ Failed to play video:", playErr);
+            setError("Failed to start camera feed. Please try again.");
+            stopStream();
+            setIsCapturing(false);
+          }
+        };
+        
+        // Fallback: also try to play immediately
         videoRef.current.play().catch(err => {
-          console.error("Video play error:", err);
-          setError("Failed to start camera feed");
-          stopStream();
-          setIsCapturing(false);
+          console.warn("⚠️  Immediate play failed (expected), will retry on loadedmetadata:", err);
         });
+      } else {
+        console.error("❌ Video ref not available");
+        setError("Video element not available");
+        stopStream();
+        setIsCapturing(false);
       }
     } catch (err: any) {
-      console.error("Error accessing webcam:", err);
+      console.error("❌ Error accessing webcam:", err);
       setIsCapturing(false);
       
       if (err.name === "NotAllowedError") {
-        setError("Camera permission denied. Please allow camera access in your browser settings.");
+        setError("🔒 Camera permission denied. Please allow camera access in your browser settings.");
       } else if (err.name === "NotFoundError") {
-        setError("No camera device found. Please connect a camera.");
+        setError("📷 No camera device found. Please connect a camera.");
+      } else if (err.name === "NotReadableError") {
+        setError("📷 Camera is already in use by another application.");
       } else {
         setError(`Camera error: ${err.message}`);
       }
@@ -117,27 +138,41 @@ export function FaceCapture({ onCapture, label = "Capture Face" }: FaceCapturePr
   };
 
   const handleCapture = async () => {
-    if (!videoRef.current || !modelsLoaded) {
-      setError("Camera not ready. Please wait...");
+    if (!videoRef.current) {
+      setError("❌ Camera not ready. Please wait...");
       return;
     }
 
     try {
       setError(null);
-      setIsCapturing(true);
-      console.log("Capture initiated - Models available:", modelsAvailable);
+      console.log("📸 Capture initiated - Models available:", modelsAvailable);
       
-      // Only attempt real face detection if models are actually available
+      // Save image to canvas
+      if (canvasRef.current && videoRef.current) {
+        const ctx = canvasRef.current.getContext("2d");
+        if (ctx) {
+          canvasRef.current.width = videoRef.current.videoWidth;
+          canvasRef.current.height = videoRef.current.videoHeight;
+          ctx.drawImage(videoRef.current, 0, 0);
+          console.log("✅ Face image saved to canvas");
+        }
+      }
+      
       if (modelsAvailable) {
         try {
-          console.log("Attempting face detection with loaded models...");
+          console.log("🔍 Attempting face detection with loaded models...");
+          if (!videoRef.current) {
+            setError("Video element not available");
+            return;
+          }
+
           const detections = await faceapi
             .detectSingleFace(videoRef.current)
             .withFaceLandmarks()
             .withFaceDescriptor();
 
           if (detections && detections.descriptor) {
-            console.log("✓ Face detected and captured successfully");
+            console.log("✅ Face detected and captured successfully");
             const descriptorArray = Array.from(detections.descriptor);
             onCapture(descriptorArray);
             setCaptured(true);
@@ -150,15 +185,14 @@ export function FaceCapture({ onCapture, label = "Capture Face" }: FaceCapturePr
             return;
           }
         } catch (detectionError) {
-          console.warn("Real face detection failed, using fallback:", detectionError);
-          // Continue to fallback mode below
+          console.warn("⚠️  Real face detection failed, using fallback:", detectionError);
         }
       } else {
-        console.log("Models not available, using fallback mode");
+        console.log("📋 Models not available, using fallback mode");
       }
 
       // Fallback: generate mock descriptor for development
-      console.log("Using fallback face descriptor...");
+      console.log("✅ Using fallback face descriptor for development...");
       const mockDescriptor = Array.from(
         { length: 128 },
         () => Math.random() * 2 - 1
@@ -168,7 +202,7 @@ export function FaceCapture({ onCapture, label = "Capture Face" }: FaceCapturePr
       stopStream();
       setIsCapturing(false);
     } catch (err) {
-      console.error("Capture error:", err);
+      console.error("❌ Capture error:", err);
       setError("Failed to capture face. Please try again.");
       setIsCapturing(false);
     }
@@ -199,6 +233,9 @@ export function FaceCapture({ onCapture, label = "Capture Face" }: FaceCapturePr
           muted
           className={`w-full h-full object-cover ${!isCapturing ? "hidden" : ""}`}
         />
+
+        {/* Hidden Canvas for Image Saving */}
+        <canvas ref={canvasRef} className="hidden" />
         
         {captured && (
           <div className="absolute inset-0 flex items-center justify-center bg-green-500/20">
@@ -218,7 +255,7 @@ export function FaceCapture({ onCapture, label = "Capture Face" }: FaceCapturePr
       {/* Model Loading Error */}
       {modelError && (
         <div className="w-full max-w-md p-3 bg-secondary/20 border border-secondary rounded-lg text-sm text-secondary">
-          ⚠️ Face recognition models failed to load. Check browser console for details.
+          ⚠️ Face recognition models failed to load. Using fallback mode. Check browser console for details.
         </div>
       )}
 
@@ -228,11 +265,10 @@ export function FaceCapture({ onCapture, label = "Capture Face" }: FaceCapturePr
           <Button
             type="button"
             onClick={startVideo}
-            disabled={!modelsLoaded || modelError}
-            className="w-full bg-gradient-to-r from-primary to-secondary text-background hover:from-primary/90 hover:to-secondary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-primary to-secondary text-background hover:from-primary/90 hover:to-secondary/90"
           >
             <Camera className="w-4 h-4 mr-2" />
-            {!modelsLoaded ? `Loading... ${loadingProgress}` : "Start Camera"}
+            {!modelsLoaded ? `Loading Models...` : "Start Camera"}
           </Button>
         )}
 

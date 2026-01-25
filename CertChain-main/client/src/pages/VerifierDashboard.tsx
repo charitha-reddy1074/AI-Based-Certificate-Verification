@@ -61,7 +61,7 @@ export default function VerifierDashboard() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3.5 text-muted-foreground w-5 h-5" />
               <Input 
-                placeholder="Enter Student Roll Number (e.g. 2x11CS0x0xxx)" 
+                placeholder="Enter Student Roll Number (e.g. CS2024001234)" 
                 className="pl-10 h-12 text-lg bg-input border-input text-foreground placeholder:text-muted-foreground"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -99,8 +99,23 @@ export default function VerifierDashboard() {
           <h3 className="text-2xl font-bold mb-6 border-b border-border pb-2 text-foreground">Previously Verified</h3>
           <div className="grid md:grid-cols-2 gap-8">
             {unlockedCertificates.data?.map((cert) => (
-              <CertificateCard key={cert.id} certificate={cert} />
+              <motion.div key={cert.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="group relative">
+                <CertificateCard certificate={cert} />
+                {cert.txHash && (
+                  <div className="mt-4 p-4 bg-card border border-border rounded-lg">
+                    <p className="text-xs font-mono text-muted-foreground truncate">
+                      <span className="font-semibold text-foreground">TX Hash:</span> {cert.txHash}
+                    </p>
+                  </div>
+                )}
+              </motion.div>
             ))}
+            {unlockedCertificates.data?.length === 0 && (
+              <div className="col-span-full text-center py-16 px-8 bg-gradient-to-br from-muted/30 to-background border border-border/50 rounded-2xl">
+                <Lock className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                <p className="text-muted-foreground">No certificates unlocked yet. Use search above to find and unlock certificates.</p>
+              </div>
+            )}
           </div>
         </section>
       </main>
@@ -111,12 +126,12 @@ export default function VerifierDashboard() {
           <DialogHeader>
             <DialogTitle className="text-foreground">Unlock Certificate</DialogTitle>
             <DialogDescription className="text-muted-foreground">
-              A fee of ₹10 is required to verify and download this certificate from the blockchain.
+              A fee of ₹1000 is required to verify and download this certificate from the blockchain.
             </DialogDescription>
           </DialogHeader>
           
           <div className="bg-primary/10 border border-primary/20 p-6 rounded-lg text-center my-4">
-            <p className="text-3xl font-bold text-primary">₹10.00</p>
+            <p className="text-3xl font-bold text-primary">₹1000.00</p>
             <p className="text-sm text-muted-foreground">One-time verification fee</p>
           </div>
 

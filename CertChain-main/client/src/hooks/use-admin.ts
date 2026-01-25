@@ -39,6 +39,7 @@ export function useAdmin() {
       return api.admin.issueCertificate.responses[201].parse(await res.json());
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.admin.analytics.path] });
       toast({ title: "Success", description: "Certificate issued on the blockchain" });
     },
   });
