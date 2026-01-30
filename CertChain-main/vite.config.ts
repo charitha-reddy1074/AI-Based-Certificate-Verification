@@ -18,6 +18,18 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, 'dist/public'),
     emptyOutDir: true,
+    reportCompressedSize: false,
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-radix': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
+          'vendor-tanstack': ['@tanstack/react-query'],
+          'vendor-tensorflow': ['@tensorflow/tfjs', '@tensorflow/tfjs-backend-webgl'],
+        },
+      },
+    },
   },
 
   server: {

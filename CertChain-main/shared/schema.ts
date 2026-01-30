@@ -16,6 +16,7 @@ export const users = pgTable("users", {
   school: text("school"),
   branch: text("branch"),
   faceDescriptors: jsonb("face_descriptors"),
+  faceImage: text("face_image"), // Store face image (base64 dataURL) for Rekognition verification
   company: text("company"),
   position: text("position"),
   companyEmail: text("company_email"),

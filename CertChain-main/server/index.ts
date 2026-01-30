@@ -5,6 +5,7 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 
 const app = express();
+const MAX_JSON_BODY = process.env.MAX_JSON_BODY || "5mb";
 const httpServer = createServer(app);
 
 declare module "http" {
@@ -15,13 +16,14 @@ declare module "http" {
 
 app.use(
   express.json({
+    limit: MAX_JSON_BODY,
     verify: (req, _res, buf) => {
       req.rawBody = buf;
     },
   }),
 );
 
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: false, limit: MAX_JSON_BODY }));
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -64,6 +66,14 @@ app.use((req, res, next) => {
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
+    // Handle payload too large explicitly to return friendly message
+    if (err && (err.type === 'entity.too.large' || err.status === 413)) {
+      const limit = MAX_JSON_BODY;
+      console.warn('Payload too large:', err.message || err);
+      if (!res.headersSent) return res.status(413).json({ message: `Payload too large. Please send images smaller than ${limit}.` });
+      return next(err);
+    }
+
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 

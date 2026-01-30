@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { CertificateCard } from "@/components/CertificateCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Search, Loader2, LogOut, Lock, GraduationCap, Shield } from "lucide-react";
+import { Search, Loader2, LogOut, Lock, GraduationCap, Shield, Download } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function VerifierDashboard() {
@@ -15,6 +15,7 @@ export default function VerifierDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [selectedCertId, setSelectedCertId] = useState<number | null>(null);
+  const [downloadingCertId, setDownloadingCertId] = useState<string | null>(null);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +30,34 @@ export default function VerifierDashboard() {
     await unlock.mutateAsync(selectedCertId);
     setSelectedCertId(null);
     setSearchResults([]); // Clear search to show unlocked list update
+  };
+
+  const downloadCertificateFromApi = async (certId: string) => {
+    try {
+      setDownloadingCertId(certId);
+      const response = await fetch(`/api/admin/certificate/${certId}/download`, {
+        method: 'GET',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `certificate-${certId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading certificate:', error);
+      alert('Failed to download certificate. Please try again.');
+    } finally {
+      setDownloadingCertId(null);
+    }
   };
 
   return (
@@ -126,13 +155,32 @@ export default function VerifierDashboard() {
             {unlockedCertificates.data?.map((cert) => (
               <motion.div key={cert.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="group relative">
                 <CertificateCard certificate={cert} />
-                {cert.txHash && (
-                  <div className="mt-4 p-4 bg-card border border-border rounded-lg">
-                    <p className="text-xs font-mono text-muted-foreground truncate">
-                      <span className="font-semibold text-foreground">TX Hash:</span> {cert.txHash}
-                    </p>
-                  </div>
-                )}
+                <div className="mt-4 space-y-4">
+                  {cert.txHash && (
+                    <div className="p-4 bg-card border border-border rounded-lg">
+                      <p className="text-xs font-mono text-muted-foreground truncate">
+                        <span className="font-semibold text-foreground">TX Hash:</span> {cert.txHash}
+                      </p>
+                    </div>
+                  )}
+                  <Button 
+                    onClick={() => downloadCertificateFromApi(cert.id as string)}
+                    disabled={downloadingCertId === cert.id}
+                    className="w-full bg-primary hover:bg-primary/90 text-background font-medium transition-all"
+                  >
+                    {downloadingCertId === cert.id ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Downloading...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4 mr-2" />
+                        Download Certificate
+                      </>
+                    )}
+                  </Button>
+                </div>
               </motion.div>
             ))}
             {unlockedCertificates.data?.length === 0 && (

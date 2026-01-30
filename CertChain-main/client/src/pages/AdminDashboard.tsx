@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useForm } from "react-hook-form";
-import { CheckCircle, Loader2, LogOut, UserPlus, Users, BarChart3, TrendingUp, Award, FileCheck, GraduationCap, Activity, CreditCard, Eye, Clock, User, Mail, MapPin, AlertCircle, CheckCheckIcon, Shield, Zap, Download } from "lucide-react";
+import { CheckCircle, Loader2, LogOut, UserPlus, Users, BarChart3, TrendingUp, Award, FileCheck, GraduationCap, Activity, CreditCard, Eye, Clock, User, Mail, MapPin, AlertCircle, CheckCheckIcon, Shield, Zap, Download, Layers, BookOpen, Calendar, Lock, Unlock } from "lucide-react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@shared/routes";
@@ -18,6 +18,9 @@ export default function AdminDashboard() {
   const { logout } = useAuth();
   const { register, handleSubmit, reset } = useForm();
   const [issuedCertId, setIssuedCertId] = React.useState<number | null>(null);
+  const [selectedBatch, setSelectedBatch] = React.useState<number | null>(null);
+  const [batchStudents, setBatchStudents] = React.useState<any[]>([]);
+  const [batchLoading, setBatchLoading] = React.useState(false);
 
   // Fetch analytics data with detailed information
   const { data: analytics } = useQuery({
@@ -29,20 +32,35 @@ export default function AdminDashboard() {
     },
   });
 
-  const onIssue = async (data: any) => {
+  // Fetch students by batch year
+  const fetchStudentsByBatch = async (year: number) => {
     try {
-      const cert = await issueCertificate.mutateAsync({
-        ...data,
-        studentId: parseInt(data.studentId),
-        passingYear: parseInt(data.passingYear),
-        joiningYear: parseInt(data.joiningYear),
-        qrCode: `CERT-${data.rollNumber}-${Date.now()}`,
-      });
-      setIssuedCertId(cert.id);
-      reset();
-    } catch (e) {
-      console.error(e);
+      setBatchLoading(true);
+      setSelectedBatch(year);
+      const res = await fetch(`/api/admin/students/batch/${year}`);
+      if (!res.ok) throw new Error("Failed to fetch batch students");
+      const data = await res.json();
+      setBatchStudents(data || []);
+    } catch (err) {
+      console.error("Error fetching batch students:", err);
+      setBatchStudents([]);
+    } finally {
+      setBatchLoading(false);
     }
+  };
+
+  // Handle certificate issuance
+  const onIssue = (data: any) => {
+    issueCertificate.mutate(data, {
+      onSuccess: (result: any) => {
+        setIssuedCertId(result.id);
+        reset();
+        setTimeout(() => setIssuedCertId(null), 5000);
+      },
+      onError: (error: any) => {
+        console.error("Certificate issuance failed:", error);
+      }
+    });
   };
 
   return (
@@ -182,6 +200,20 @@ export default function AdminDashboard() {
                   >
                     <Eye className="w-4 h-4 mr-2" />
                     Access Logs
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="batch"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg"
+                  >
+                    <Layers className="w-4 h-4 mr-2" />
+                    Batch Analytics
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="accounts"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg"
+                  >
+                    <Shield className="w-4 h-4 mr-2" />
+                    Manage Accounts
                   </TabsTrigger>
                   <TabsTrigger 
                     value="issue"
@@ -558,6 +590,146 @@ export default function AdminDashboard() {
                   )}
                 </Button>
               </form>
+            </Card>
+          </TabsContent>
+
+          {/* Batch Analytics Tab */}
+          <TabsContent value="batch" className="mt-8">
+            <Card className="p-8 bg-gradient-to-br from-card via-card to-card/50 border-primary/20 shadow-lg backdrop-blur-sm">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="p-3 rounded-lg bg-violet-500/10 border border-violet-500/20">
+                  <Layers className="w-6 h-6 text-violet-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground">Batch-wise Student Analytics</h2>
+                  <p className="text-sm text-muted-foreground">View and manage students by enrollment batch/year</p>
+                </div>
+              </div>
+
+              <div className="mb-8">
+                <Label className="text-foreground font-semibold mb-4 block">Select Batch Year</Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[2020, 2021, 2022, 2023, 2024, 2025, 2026].map((year) => (
+                    <Button
+                      key={year}
+                      onClick={() => fetchStudentsByBatch(year)}
+                      variant={selectedBatch === year ? "default" : "outline"}
+                      className={`h-12 font-semibold transition-all duration-300 ${
+                        selectedBatch === year
+                          ? "bg-gradient-to-r from-violet-600 to-violet-500 text-white shadow-lg"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <Calendar className="w-4 h-4 mr-2" />
+                      {year}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {batchLoading ? (
+                <div className="flex justify-center items-center py-20">
+                  <div className="text-center">
+                    <Loader2 className="animate-spin w-10 h-10 text-primary mx-auto mb-4" />
+                    <p className="text-muted-foreground">Loading batch data...</p>
+                  </div>
+                </div>
+              ) : batchStudents.length === 0 ? (
+                <div className="text-center py-16 px-8 bg-gradient-to-br from-muted/30 to-background border border-border/50 rounded-2xl">
+                  <BookOpen className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                  <p className="text-muted-foreground text-lg">No students found for batch {selectedBatch}</p>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-6">
+                  {batchStudents.map((student: any, idx: number) => (
+                    <motion.div
+                      key={student.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                    >
+                      <Card className="p-5 bg-gradient-to-br from-card via-card/80 to-card/50 border-violet-500/30 hover:border-violet-500/60 transition-all">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <h3 className="font-bold text-lg text-foreground">{student.fullName}</h3>
+                            <p className="text-sm text-muted-foreground">{student.rollNumber || 'No Roll #'}</p>
+                          </div>
+                          <span className="px-3 py-1 bg-violet-500/20 text-violet-700 text-xs rounded-full font-semibold">
+                            {selectedBatch}-{Number(selectedBatch) + 4}
+                          </span>
+                        </div>
+                        <div className="text-sm space-y-2 text-muted-foreground">
+                          <p>📧 {student.email}</p>
+                          {student.branch && <p>🎓 {student.branch}</p>}
+                        </div>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </TabsContent>
+
+          {/* Account Management Tab */}
+          <TabsContent value="accounts" className="mt-8">
+            <Card className="p-8 bg-gradient-to-br from-card via-card to-card/50 border-primary/20 shadow-lg backdrop-blur-sm">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                  <Shield className="w-6 h-6 text-orange-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground">Account Management</h2>
+                  <p className="text-sm text-muted-foreground">Block/Unblock student and verifier accounts</p>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-8">
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Lock className="w-5 h-5 text-red-600" />
+                    <h3 className="text-lg font-bold text-foreground">Block Account</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-6">Prevent users from accessing the platform</p>
+                  
+                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                    {analytics?.recentActivity?.slice(0, 5).map((user: any) => (
+                      <motion.div
+                        key={user.id}
+                        className="p-4 bg-muted/50 rounded-lg border border-border/50 hover:border-red-500/30 transition-all group"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-semibold text-foreground">{user.user?.fullName || 'User'}</p>
+                            <p className="text-xs text-muted-foreground">{user.user?.email || 'N/A'}</p>
+                          </div>
+                          <Button
+                            size="sm"
+                            className="bg-red-600/80 hover:bg-red-700 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => console.log('Block user:', user.user?.id)}
+                          >
+                            <Lock className="w-3 h-3 mr-1" />
+                            Block
+                          </Button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Unlock className="w-5 h-5 text-green-600" />
+                    <h3 className="text-lg font-bold text-foreground">Unblock Account</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-6">Restore access to blocked user accounts</p>
+
+                  <div className="p-8 bg-gradient-to-br from-green-500/10 to-emerald-500/5 rounded-lg border border-green-500/20 text-center">
+                    <Unlock className="w-12 h-12 mx-auto mb-3 text-green-600 opacity-50" />
+                    <p className="text-sm text-muted-foreground">No blocked accounts currently</p>
+                    <p className="text-xs text-muted-foreground mt-2">Blocked users will appear here</p>
+                  </div>
+                </div>
+              </div>
             </Card>
           </TabsContent>
         </Tabs>

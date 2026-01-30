@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 import type { Certificate } from "@shared/schema";
 import { QRCodeSVG } from "qrcode.react";
-import { ShieldCheck, Download, ExternalLink } from "lucide-react";
+import { ShieldCheck, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -18,7 +18,7 @@ export const CertificateCard = forwardRef<HTMLDivElement, CertificateCardProps>(
       const element = document.getElementById(`cert-${certificate.id}`);
       if (!element) return;
 
-      const canvas = await html2canvas(element, { scale: 2 });
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("l", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -33,37 +33,44 @@ export const CertificateCard = forwardRef<HTMLDivElement, CertificateCardProps>(
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-6 bg-gradient-to-br from-card/50 to-background border border-border rounded-xl hover:border-primary/50 hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 group cursor-pointer"
+          whileHover={{ y: -8, boxShadow: "0 20px 40px rgba(79, 70, 229, 0.2)" }}
+          className="p-6 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border-2 border-indigo-200 dark:border-indigo-800 rounded-2xl hover:border-indigo-500 transition-all duration-300 group cursor-pointer shadow-md hover:shadow-2xl"
         >
-          <div className="flex justify-between items-start mb-4">
+          <div className="flex justify-between items-start mb-6">
             <div>
-              <h3 className="text-lg font-bold text-primary">
+              <h3 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
                 {certificate.university}
               </h3>
-              <p className="text-xs text-muted-foreground mt-1">Certificate ID: {certificate.id}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">Certificate ID: {certificate.id.substring(0, 12)}...</p>
             </div>
-            <div className="bg-primary/10 p-3 rounded-lg group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300">
-              <ShieldCheck className="w-5 h-5 text-primary" />
+            <div className="bg-gradient-to-br from-indigo-500 to-blue-500 p-3 rounded-xl group-hover:scale-110 transition-transform duration-300 shadow-lg">
+              <ShieldCheck className="w-6 h-6 text-white" />
             </div>
           </div>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Student:</span>
-              <span className="font-mono bg-input px-3 py-1 rounded blur-sm hover:blur-none transition-all text-foreground">
-                {certificate.name}
+          <div className="space-y-4 text-sm">
+            <div className="flex justify-between items-center p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+              <span className="text-slate-600 dark:text-slate-300 font-semibold">Student</span>
+              <span className="font-semibold text-slate-900 dark:text-slate-100">{certificate.name}</span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/30 dark:to-blue-900/30 rounded-lg border border-indigo-200 dark:border-indigo-800">
+              <span className="text-slate-600 dark:text-slate-300 font-semibold">Roll No</span>
+              <span className="font-bold text-indigo-600 dark:text-indigo-400">{certificate.rollNumber}</span>
+            </div>
+            {certificate.blockNumber && (
+              <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                <span className="text-slate-600 dark:text-slate-300 font-semibold">Block</span>
+                <span className="font-bold text-blue-600 dark:text-blue-400">#{certificate.blockNumber}</span>
+              </div>
+            )}
+            <div className="flex justify-between items-center p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+              <span className="text-slate-600 dark:text-slate-300 font-semibold">Branch</span>
+              <span className="text-slate-900 dark:text-slate-100 font-medium">{certificate.branch}</span>
+            </div>
+            <div className="pt-3 border-t-2 border-slate-200 dark:border-slate-700 flex justify-between items-center text-xs text-slate-600 dark:text-slate-400">
+              <span className="font-medium">{certificate.joiningYear} - {certificate.passingYear}</span>
+              <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full font-semibold flex items-center gap-1">
+                <span className="text-lg">✓</span> Verified
               </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Roll No:</span>
-              <span className="font-mono text-primary font-bold bg-primary/10 px-3 py-1 rounded">{certificate.rollNumber}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Branch:</span>
-              <span className="text-foreground font-medium">{certificate.branch}</span>
-            </div>
-            <div className="pt-2 border-t border-border/50 flex justify-between text-xs text-muted-foreground">
-              <span>{certificate.joiningYear} - {certificate.passingYear}</span>
-              <span className="text-green-500 font-semibold">✓ Verified</span>
             </div>
           </div>
         </motion.div>
@@ -74,104 +81,114 @@ export const CertificateCard = forwardRef<HTMLDivElement, CertificateCardProps>(
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        whileHover={{ y: -4 }}
+        whileHover={{ y: -8 }}
         transition={{ duration: 0.3 }}
         className="relative group"
       >
         <div
           id={`cert-${certificate.id}`}
-          className="relative bg-gradient-to-br from-background via-background to-muted text-foreground p-12 rounded-lg shadow-2xl border-[16px] border-double border-primary/20 overflow-hidden aspect-[1.414/1] flex flex-col items-center justify-between hover:border-primary/40 transition-all duration-300 min-h-[600px]"
+          className="relative bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950 text-slate-900 dark:text-slate-100 p-16 rounded-2xl shadow-2xl border-4 border-indigo-200 dark:border-indigo-900 overflow-hidden aspect-[1.414/1] flex flex-col items-center justify-between hover:border-indigo-400 dark:hover:border-indigo-700 transition-all duration-300 min-h-[650px] relative"
         >
-          {/* Background Pattern */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 pointer-events-none" />
+          {/* Premium background elements */}
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/40 to-blue-100/20 dark:from-indigo-900/20 dark:to-blue-900/10 pointer-events-none" />
+          <div className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br from-indigo-200/30 to-blue-200/20 dark:from-indigo-800/20 dark:to-blue-800/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-gradient-to-tr from-blue-200/20 to-indigo-200/10 dark:from-blue-800/10 dark:to-indigo-800/5 rounded-full blur-3xl" />
           
-          {/* Decorative Corner */}
-          <div className="absolute top-0 left-0 w-32 h-32 border-t-4 border-l-4 border-secondary/40 rounded-tl-3xl m-4" />
-          <div className="absolute bottom-0 right-0 w-32 h-32 border-b-4 border-r-4 border-secondary/40 rounded-br-3xl m-4" />
+          {/* Decorative Corners */}
+          <div className="absolute top-6 left-6 w-12 h-12 border-t-3 border-l-3 border-indigo-400 dark:border-indigo-600 rounded-tl-2xl" />
+          <div className="absolute top-6 right-6 w-12 h-12 border-t-3 border-r-3 border-indigo-400 dark:border-indigo-600 rounded-tr-2xl" />
+          <div className="absolute bottom-6 left-6 w-12 h-12 border-b-3 border-l-3 border-indigo-400 dark:border-indigo-600 rounded-bl-2xl" />
+          <div className="absolute bottom-6 right-6 w-12 h-12 border-b-3 border-r-3 border-indigo-400 dark:border-indigo-600 rounded-br-2xl" />
 
-          {/* Header */}
-          <div className="text-center z-10 w-full">
-            <h1 className="text-4xl font-black text-primary tracking-widest uppercase mb-2">
+          {/* Premium Header */}
+          <div className="text-center z-10 w-full space-y-3">
+            <div className="text-sm font-bold tracking-widest text-indigo-600 dark:text-indigo-400 uppercase letter-spacing-wide">Certified Achievement</div>
+            <h1 className="text-5xl font-black text-transparent bg-gradient-to-r from-indigo-600 to-blue-600 dark:from-indigo-400 dark:to-blue-400 bg-clip-text tracking-tight">
               {certificate.university}
             </h1>
-            <div className="h-1 w-32 bg-primary mx-auto mb-8" />
-            <h2 className="text-2xl font-display text-primary/90 italic">
-              Certificate of Completion
+            <div className="h-1.5 w-48 bg-gradient-to-r from-indigo-600 to-blue-600 dark:from-indigo-400 dark:to-blue-400 mx-auto rounded-full" />
+            <h2 className="text-2xl font-bold text-indigo-700 dark:text-indigo-300 italic font-serif">
+              Certificate of Excellence
             </h2>
           </div>
 
-          {/* Content */}
-          <div className="text-center space-y-6 z-10 max-w-2xl">
-            <p className="text-lg text-muted-foreground font-light">
-              This is to certify that
+          {/* Premium Content */}
+          <div className="text-center space-y-8 z-10 max-w-3xl">
+            <p className="text-lg text-slate-600 dark:text-slate-300 font-light tracking-wide">
+              This is Proudly Presented To
             </p>
-            <p className="text-4xl font-bold font-display text-primary border-b-2 border-dashed border-secondary/40 pb-2 inline-block px-12">
-              {certificate.name}
-            </p>
-            <p className="text-lg text-foreground">
-              Roll No: <span className="font-mono font-bold text-secondary">{certificate.rollNumber}</span>
-            </p>
-            <p className="text-lg leading-relaxed text-foreground">
-              has successfully completed the course in{" "}
-              <span className="font-bold text-primary">{certificate.branch}</span>
-              <br />
-              for the academic years{" "}
-              <span className="font-bold text-secondary">
-                {certificate.joiningYear} - {certificate.passingYear}
-              </span>
-              .
-            </p>
+            <div className="relative">
+              <p className="text-5xl font-black font-serif text-indigo-700 dark:text-indigo-300 border-b-4 border-dashed border-indigo-400 dark:border-indigo-600 pb-4 px-8">
+                {certificate.name}
+              </p>
+            </div>
+            <div className="space-y-3 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm p-6 rounded-xl border border-indigo-200 dark:border-indigo-800">
+              <p className="text-base text-slate-700 dark:text-slate-300 font-medium">
+                For Successfully Completing the Academic Program in
+              </p>
+              <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
+                {certificate.branch}
+              </p>
+              <p className="text-lg text-slate-600 dark:text-slate-300">
+                During {certificate.joiningYear} - {certificate.passingYear}
+              </p>
+            </div>
           </div>
 
-          {/* Footer */}
-          <div className="w-full flex justify-between items-end mt-12 z-10">
-            <div className="text-left">
-              <div className="bg-background p-2 rounded border border-border inline-block mb-2">
+          {/* Premium Footer */}
+          <div className="w-full flex justify-between items-end mt-8 z-10 gap-8">
+            {/* QR Code Section */}
+            <div className="flex flex-col items-center">
+              <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border-2 border-indigo-200 dark:border-indigo-800 shadow-lg mb-3">
                 <QRCodeSVG
                   value={`${window.location.origin}/verify/${certificate.id}`}
-                  size={80}
+                  size={100}
                   level="H"
                   includeMargin={true}
+                  fgColor="#4f46e5"
+                  bgColor="#ffffff"
                 />
               </div>
-              <p className="text-[10px] font-mono text-muted-foreground max-w-[200px] break-all">
-                ID: {certificate.id}
-              </p>
-              {certificate.txHash && (
-                <p className="text-[8px] font-mono text-muted-foreground max-w-[200px] break-all mt-1">
-                  TX: {certificate.txHash.substring(0, 16)}...
-                </p>
+              <p className="text-[9px] font-mono text-slate-500 dark:text-slate-400 max-w-[140px] text-center break-all font-bold">ID: {certificate.id.substring(0, 16)}</p>
+              {certificate.blockNumber && (
+                <p className="text-[9px] font-mono text-blue-600 dark:text-blue-400 max-w-[140px] text-center break-all mt-1 font-bold">Block: #{certificate.blockNumber}</p>
               )}
             </div>
 
-            <div className="flex flex-col items-center">
-              <div className="w-24 h-24 mb-2 rounded-full border-4 border-gradient-to-r from-primary to-secondary flex items-center justify-center text-secondary">
-                <ShieldCheck className="w-16 h-16" />
+            {/* Center - Seal/Badge */}
+            <div className="flex flex-col items-center justify-center">
+              <div className="w-28 h-28 mb-3 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 dark:from-indigo-600 dark:to-blue-600 flex items-center justify-center shadow-2xl border-4 border-white dark:border-slate-900 transform hover:scale-105 transition-transform">
+                <ShieldCheck className="w-16 h-16 text-white" />
               </div>
-              <span className="font-display font-bold text-secondary uppercase tracking-wider text-sm">
-                Verified On Chain
-              </span>
+              <p className="font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest text-xs">Blockchain</p>
+              <p className="font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest text-xs">Verified</p>
             </div>
 
-            <div className="text-right">
-              <div className="w-48 border-b-2 border-gradient-to-r from-primary to-secondary mb-2" />
-              <p className="font-display font-bold text-foreground">University Dean</p>
-              <p className="text-sm text-muted-foreground">Authorized Signature</p>
+            {/* Signature Section */}
+            <div className="flex flex-col items-center">
+              <p className="text-xs font-bold uppercase text-slate-600 dark:text-slate-300 mb-3 tracking-widest">Authorized By</p>
+              <div className="w-48 border-b-2 border-slate-400 dark:border-slate-600 mb-3" />
+              <p className="font-serif font-bold text-lg text-indigo-700 dark:text-indigo-300">University Authority</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Official Seal</p>
             </div>
           </div>
         </div>
 
-        {/* Action Bar (Not captured in PDF) */}
+        {/* Action Buttons - Enhanced */}
         <motion.div 
-          initial={{ opacity: 0, scale: 0.8 }}
-          whileHover={{ opacity: 1, scale: 1 }}
-          className="absolute -top-4 -right-4 hidden group-hover:flex transition-all z-20 gap-2"
+          initial={{ opacity: 0, scale: 0.8, y: 10 }}
+          whileHover={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="absolute -top-6 right-8 flex gap-3 z-20"
         >
-          <Button onClick={downloadPdf} size="icon" className="h-12 w-12 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-background">
-            <Download className="w-6 h-6" />
-          </Button>
-          <Button size="icon" className="h-12 w-12 rounded-full shadow-lg bg-secondary/20 border border-secondary hover:bg-secondary/30 text-secondary">
-            <ExternalLink className="w-6 h-6" />
+          <Button 
+            onClick={downloadPdf} 
+            size="lg"
+            className="h-14 px-6 rounded-full shadow-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-semibold flex items-center gap-2 transition-all duration-300 hover:shadow-indigo-500/50" 
+            title="Download Premium PDF"
+          >
+            <Download className="w-5 h-5" />
+            <span>Download</span>
           </Button>
         </motion.div>
       </motion.div>

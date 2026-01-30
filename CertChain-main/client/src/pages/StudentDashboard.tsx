@@ -3,12 +3,42 @@ import { useAuth } from "@/hooks/use-auth";
 import { CertificateCard } from "@/components/CertificateCard";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { LogOut, Loader2, GraduationCap, FileText, Home, BookOpen } from "lucide-react";
+import { LogOut, Loader2, GraduationCap, FileText, Home, BookOpen, Download } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState } from "react";
 
 export default function StudentDashboard() {
   const { data: certificates, isLoading } = useStudentCertificates();
   const { logout, user } = useAuth();
+  const [downloadingCertId, setDownloadingCertId] = useState<string | null>(null);
+
+  const downloadCertificateFromApi = async (certId: string) => {
+    try {
+      setDownloadingCertId(certId);
+      const response = await fetch(`/api/admin/certificate/${certId}/download`, {
+        method: 'GET',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `certificate-${certId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading certificate:', error);
+      alert('Failed to download certificate. Please try again.');
+    } finally {
+      setDownloadingCertId(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-slate-900/5 flex flex-col">
@@ -76,7 +106,26 @@ export default function StudentDashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
               >
-                <CertificateCard certificate={cert} />
+                <div className="space-y-4">
+                  <CertificateCard certificate={cert} />
+                  <Button 
+                    onClick={() => downloadCertificateFromApi(cert.id as string)}
+                    disabled={downloadingCertId === cert.id}
+                    className="w-full bg-primary hover:bg-primary/90 text-background font-medium transition-all"
+                  >
+                    {downloadingCertId === cert.id ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Downloading...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4 mr-2" />
+                        Download Certificate
+                      </>
+                    )}
+                  </Button>
+                </div>
               </motion.div>
             ))}
             

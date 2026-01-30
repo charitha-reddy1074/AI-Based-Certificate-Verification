@@ -16,6 +16,7 @@ export default function Signup() {
   const [, setLocation] = useLocation();
   const [role, setRole] = useState("student");
   const [faceDescriptor, setFaceDescriptor] = useState<number[] | null>(null);
+  const [faceImage, setFaceImage] = useState<string | undefined>(undefined);
   const [signupError, setSignupError] = useState<string | null>(null);
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm();
@@ -38,7 +39,8 @@ export default function Signup() {
         ...data,
         role,
         isApproved: false,
-        faceDescriptors: faceDescriptor ? [faceDescriptor] : undefined,
+        faceDescriptor: faceDescriptor || undefined,
+        faceImage: faceImage || undefined,
         joinedYear: data.joinedYear ? parseInt(data.joinedYear) : undefined,
         leavingYear: data.leavingYear ? parseInt(data.leavingYear) : undefined,
       });
@@ -238,8 +240,10 @@ export default function Signup() {
                   <p className="text-xs text-muted-foreground italic">No face captured yet</p>
                 )}
                 <FaceCapture 
-                  onCapture={(desc) => {
-                    setFaceDescriptor(desc);
+                  onCapture={(payload) => {
+                    // payload: { descriptor: number[]; image?: string }
+                    setFaceDescriptor(Array.isArray((payload as any)?.descriptor) ? (payload as any).descriptor : null);
+                    if ((payload as any)?.image) setFaceImage((payload as any).image);
                     setSignupError(null);
                   }}
                   label="Capture your face for secure login" 

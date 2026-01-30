@@ -11,10 +11,20 @@ export const users = pgTable("users", {
 export const certificates = pgTable("certificates", {
   id: serial("id").primaryKey(),
   studentId: serial("student_id").references(() => users.id),
-  rollNumber: varchar("roll_number", { length: 50 }).unique().notNull(),
-  ipfsCid: text("ipfs_cid").notNull(),       // The link to the file on IPFS
-  imageUrl: text("image_url"),               // IPFS URL for the certificate image
-  txHash: text("tx_hash"),                   // The Ethereum transaction hash
+  name: varchar("name", { length: 255 }).notNull(),
+  rollNumber: varchar("roll_number", { length: 50 }).notNull(),
+  branch: varchar("branch", { length: 100 }),
+  university: varchar("university", { length: 255 }),
+  joiningYear: serial("joining_year"),
+  passingYear: serial("passing_year"),
+  ipfsCid: text("ipfs_cid"),
+  imageUrl: text("image_url"),
+  txHash: text("tx_hash"),
+  blockNumber: serial("block_number"),        // Blockchain block number - unique identifier
+  blockHash: text("block_hash"),              // Block hash for verification
+  previousHash: text("previous_hash"),        // Previous block hash for chain verification
+  qrCode: varchar("qr_code", { length: 255 }),
+  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -36,11 +46,20 @@ export const insertUserSchema = z.object({
 });
 
 export const insertCertificateSchema = z.object({
-  studentId: z.number(),
+  studentId: z.number().optional(),
+  name: z.string(),
   rollNumber: z.string(),
-  ipfsCid: z.string(),
+  branch: z.string().optional(),
+  university: z.string().optional(),
+  joiningYear: z.number().optional(),
+  passingYear: z.number().optional(),
+  ipfsCid: z.string().optional(),
   imageUrl: z.string().optional(),
   txHash: z.string().optional(),
+  blockNumber: z.number().optional(),
+  blockHash: z.string().optional(),
+  previousHash: z.string().optional(),
+  qrCode: z.string().optional(),
 });
 
 export const insertVerifierUnlockSchema = z.object({

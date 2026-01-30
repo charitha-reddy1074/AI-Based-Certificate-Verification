@@ -22,6 +22,7 @@ const userSchema = new mongoose.Schema({
   school: String,
   branch: String,
   faceDescriptors: mongoose.Schema.Types.Mixed,
+  faceImage: String, // Store face image (base64 dataURL) for Rekognition verification
   company: String,
   position: String,
   companyEmail: String,
@@ -45,8 +46,8 @@ const certificateSchema = new mongoose.Schema({
 });
 
 const unlockSchema = new mongoose.Schema({
-  verifierId: { type: Number, required: true },
-  certificateId: { type: Number, required: true },
+  verifierId: { type: String, required: true },
+  certificateId: { type: String, required: true },
   paidAmount: { type: Number, default: 10 },
   unlockedAt: { type: Date, default: Date.now },
 });
@@ -100,7 +101,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(email: string, updates: Partial<InsertUser>): Promise<User | undefined>;
-  updateUserApproval(id: number, isApproved: boolean): Promise<User>;
+  updateUserApproval(id: string, isApproved: boolean): Promise<User>;
   getPendingUsers(): Promise<User[]>;
   getAllUsers(): Promise<User[]>;
   
@@ -164,8 +165,8 @@ export class MemoryStorage implements IStorage {
     return updated;
   }
 
-  async updateUserApproval(id: number, isApproved: boolean): Promise<User> {
-    const user = this.users.get(id);
+  async updateUserApproval(id: string, isApproved: boolean): Promise<User> {
+    const user = this.users.get(Number(id));
     if (!user) throw new Error("User not found");
     const updated = { ...user, isApproved };
     this.users.set(id, updated);
@@ -209,19 +210,19 @@ export class MemoryStorage implements IStorage {
     return Array.from(this.certificates.values()).filter(c => c.rollNumber === rollNumber);
   }
 
-  async getCertificateById(id: number): Promise<Certificate | undefined> {
-    return this.certificates.get(id);
+  async getCertificateById(id: string): Promise<Certificate | undefined> {
+    return this.certificates.get(id as any);
   }
 
-  async getCertificate(id: number): Promise<Certificate | undefined> {
-    return this.certificates.get(id);
+  async getCertificate(id: string): Promise<Certificate | undefined> {
+    return this.certificates.get(id as any);
   }
 
   async getAllCertificates(): Promise<Certificate[]> {
     return Array.from(this.certificates.values());
   }
 
-  async createUnlock(verifierId: number, certificateId: number): Promise<VerifierUnlock> {
+  async createUnlock(verifierId: string, certificateId: string): Promise<VerifierUnlock> {
     const unlock: VerifierUnlock = {
       id: this.unlockIdCounter++,
       verifierId,
@@ -244,6 +245,22 @@ export class MemoryStorage implements IStorage {
     return Array.from(this.unlocks.values()).some(
       u => u.verifierId === verifierId && u.certificateId === certificateId
     );
+  }
+
+  async updateUserStatus(userId: number, isActive: boolean): Promise<User> {
+    const user = this.users.get(userId);
+    if (!user) throw new Error("User not found");
+    const updated = { ...user, isApproved: isActive };
+    this.users.set(userId, updated);
+    return updated;
+  }
+
+  async revokeCertificate(certId: number): Promise<Certificate> {
+    const cert = this.certificates.get(certId);
+    if (!cert) throw new Error("Certificate not found");
+    const updated = { ...cert, isActive: false };
+    this.certificates.set(certId, updated);
+    return updated;
   }
 }
 
@@ -296,7 +313,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async updateUserApproval(id: number, isApproved: boolean): Promise<User> {
+  async updateUserApproval(id: string, isApproved: boolean): Promise<User> {
     try {
       const mongoUser = await UserModel.findByIdAndUpdate(
         id,
@@ -361,7 +378,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getCertificateById(id: number): Promise<Certificate | undefined> {
+  async getCertificateById(id: string): Promise<Certificate | undefined> {
     try {
       const mongoCert = await CertificateModel.findById(id);
       if (!mongoCert) return undefined;
@@ -386,7 +403,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async createUnlock(verifierId: number, certificateId: number): Promise<VerifierUnlock> {
+  async createUnlock(verifierId: string, certificateId: string): Promise<VerifierUnlock> {
     try {
       const mongoUnlock = await UnlockModel.create({
         verifierId,
@@ -400,7 +417,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getUnlockedCertificates(verifierId: number): Promise<Certificate[]> {
+  async getUnlockedCertificates(verifierId: string): Promise<Certificate[]> {
     try {
       const unlocks = await UnlockModel.find({ verifierId });
       const certificateIds = unlocks.map(u => u.certificateId);
@@ -438,6 +455,7 @@ export class DatabaseStorage implements IStorage {
       school: doc.school ?? null,
       branch: doc.branch ?? null,
       faceDescriptors: doc.faceDescriptors ?? null,
+      faceImage: doc.faceImage ?? null,
       company: doc.company ?? null,
       position: doc.position ?? null,
       companyEmail: doc.companyEmail ?? null,
@@ -602,6 +620,36 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
+
+  async updateUserStatus(userId: number, isActive: boolean): Promise<User> {
+    try {
+      const mongoUser = await UserModel.findByIdAndUpdate(
+        userId,
+        { isApproved: isActive },
+        { new: true }
+      );
+      if (!mongoUser) throw new Error("User not found");
+      return this.mongoToUser(mongoUser);
+    } catch (err) {
+      console.error('Error updateUserStatus:', err);
+      throw err;
+    }
+  }
+
+  async revokeCertificate(certId: number): Promise<Certificate> {
+    try {
+      const mongoCert = await CertificateModel.findByIdAndUpdate(
+        certId,
+        { isActive: false },
+        { new: true }
+      );
+      if (!mongoCert) throw new Error("Certificate not found");
+      return this.mongoToCertificate(mongoCert);
+    } catch (err) {
+      console.error('Error revokeCertificate:', err);
+      throw err;
+    }
+  }
 }
 
 // Old DatabaseStorage implementation (PostgreSQL/Drizzle) - commented out as fallback
@@ -622,10 +670,10 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async updateUserApproval(id: number, isApproved: boolean): Promise<User> {
+  async updateUserApproval(id: string, isApproved: boolean): Promise<User> {
     const [user] = await db.update(users)
       .set({ isApproved })
-      .where(eq(users.id, id))
+      .where(eq(users.id, parseInt(id)))
       .returning();
     return user;
   }
@@ -651,13 +699,13 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(certificates).where(eq(certificates.rollNumber, rollNumber));
   }
 
-  async getCertificateById(id: number): Promise<Certificate | undefined> {
-    const [cert] = await db.select().from(certificates).where(eq(certificates.id, id));
+  async getCertificateById(id: string): Promise<Certificate | undefined> {
+    const [cert] = await db.select().from(certificates).where(eq(certificates.id, Number(id)));
     return cert;
   }
 
-  async getCertificate(id: number): Promise<Certificate | undefined> {
-    const [cert] = await db.select().from(certificates).where(eq(certificates.id, id));
+  async getCertificate(id: string): Promise<Certificate | undefined> {
+    const [cert] = await db.select().from(certificates).where(eq(certificates.id, Number(id)));
     return cert;
   }
 
@@ -665,16 +713,16 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(certificates);
   }
 
-  async createUnlock(verifierId: number, certificateId: number): Promise<VerifierUnlock> {
+  async createUnlock(verifierId: string, certificateId: string): Promise<VerifierUnlock> {
     const [unlock] = await db.insert(verifierUnlocks).values({
-      verifierId,
-      certificateId,
+      verifierId: Number(verifierId),
+      certificateId: Number(certificateId),
       paidAmount: 10,
     }).returning();
     return unlock;
   }
 
-  async getUnlockedCertificates(verifierId: number): Promise<Certificate[]> {
+  async getUnlockedCertificates(verifierId: string): Promise<Certificate[]> {
     const results = await db.select({
       certificate: certificates
     })

@@ -15,7 +15,7 @@ export default function Login() {
   const { login } = useAuth();
   const [, setLocation] = useLocation();
   const [role, setRole] = useState<string>("student");
-  const [faceDescriptor, setFaceDescriptor] = useState<number[] | null>(null);
+  const [faceDescriptor, setFaceDescriptor] = useState<{ descriptor: number[]; image?: string } | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
 
   const { register, handleSubmit, formState: { errors } } = useForm();
@@ -23,7 +23,7 @@ export default function Login() {
   const onSubmit = async (data: any) => {
     setLoginError(null);
     
-    if (role === "student" && !faceDescriptor) {
+    if (role === "student" && !(faceDescriptor && Array.isArray(faceDescriptor.descriptor))) {
       setLoginError("Face verification is required for student login.");
       return;
     }
@@ -32,7 +32,8 @@ export default function Login() {
       await login.mutateAsync({
         email: data.email,
         password: data.password,
-        faceDescriptor: faceDescriptor || undefined
+        faceDescriptor: faceDescriptor?.descriptor || undefined,
+        faceImage: faceDescriptor?.image || undefined,
       });
       
       // Redirect based on role
@@ -41,7 +42,19 @@ export default function Login() {
       else setLocation("/verifier");
     } catch (error: any) {
       console.error("Login error:", error);
-      setLoginError(error.message || "Login failed. Please check your credentials and try again.");
+      
+      // Parse error message to provide better feedback
+      const errorMsg = error.message || "Login failed";
+      
+      if (errorMsg.includes("Biometric verification failed")) {
+        setLoginError("❌ Biometric verification failed. Your face did not match. Please try again with a clear face.");
+      } else if (errorMsg.includes("Face verification") || errorMsg.includes("face")) {
+        setLoginError("❌ Face verification failed. Please ensure your face is clearly visible and try again.");
+      } else if (errorMsg.includes("invalid") || errorMsg.includes("incorrect") || errorMsg.includes("password")) {
+        setLoginError("❌ Invalid email or password. Please check your credentials and try again.");
+      } else {
+        setLoginError(`❌ ${errorMsg}`);
+      }
     }
   };
 
@@ -151,8 +164,8 @@ export default function Login() {
                 <p className="text-xs text-muted-foreground">Complete face verification to proceed with login</p>
               )}
               <FaceCapture 
-                onCapture={(desc) => {
-                  setFaceDescriptor(desc);
+                onCapture={(payload) => {
+                  setFaceDescriptor(payload as any);
                   setLoginError(null);
                 }} 
                 label="Required for Student Login" 

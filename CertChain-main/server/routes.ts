@@ -54,17 +54,17 @@ function euclideanDistance(desc1: number[], desc2: number[]): number {
   // Validate inputs
   if (!Array.isArray(desc1) || !Array.isArray(desc2)) {
     console.warn('Invalid descriptor type:', typeof desc1, typeof desc2);
-    return 1.0;
+    return Number.MAX_VALUE;
   }
   
   if (desc1.length !== desc2.length) {
     console.warn(`Descriptor length mismatch: ${desc1.length} vs ${desc2.length}`);
-    return 1.0;
+    return Number.MAX_VALUE;
   }
   
   if (desc1.length === 0) {
     console.warn('Empty descriptors');
-    return 1.0;
+    return Number.MAX_VALUE;
   }
   
   let sum = 0;
@@ -74,8 +74,10 @@ function euclideanDistance(desc1: number[], desc2: number[]): number {
   }
   
   const distance = Math.sqrt(sum);
-  console.log(`✓ Face match distance: ${distance.toFixed(4)} (threshold: 0.6)`);
-  return distance;
+  // Normalize distance by descriptor length for consistent comparison
+  const normalizedDistance = distance / Math.sqrt(desc1.length);
+  console.log(`✓ Face match distance: ${distance.toFixed(4)} (normalized: ${normalizedDistance.toFixed(4)}, threshold: 0.4)`);
+  return normalizedDistance;
 }
 
 export async function registerRoutes(
@@ -104,15 +106,17 @@ export async function registerRoutes(
       { usernameField: "email" },
       async (email, password, done) => {
         try {
+          console.log(`🔍 Passport strategy: Looking up user ${email}`);
           const user = await storage.getUserByEmail(email);
           if (!user) {
-            console.warn(`Login attempt for non-existent user: ${email}`);
+            console.warn(`❌ User not found: ${email}`);
             return done(null, false, { message: "Invalid email or password" });
           }
           
+          console.log(`✓ User found: ${email}, checking password...`);
           const passwordMatch = await comparePasswords(password, user.password);
           if (!passwordMatch) {
-            console.warn(`Invalid password for user: ${email}`);
+            console.warn(`❌ Password mismatch for user: ${email}`);
             return done(null, false, { message: "Invalid email or password" });
           }
           
@@ -173,7 +177,12 @@ export async function registerRoutes(
   app.post(api.auth.login.path, (req, res, next) => {
     passport.authenticate("local", async (err: any, user: any, info: any) => {
       if (err) return next(err);
-      if (!user) return res.status(401).json(info);
+      
+      // If no user, it's an auth failure (invalid email/password)
+      if (!user) {
+        console.log(`❌ Login failed - Invalid credentials: ${req.body.email}`);
+        return res.status(401).json({ message: "Invalid email or password. Please check your credentials and try again." });
+      }
 
       // MFA Check for Students
       if (user.role === 'student') {
@@ -182,58 +191,65 @@ export async function registerRoutes(
           return res.status(401).json({ message: "Face verification required" });
         }
         
-        // Validate descriptor is array of numbers
-        if (!Array.isArray(faceDescriptor) || faceDescriptor.some(v => typeof v !== 'number')) {
-          console.warn('Invalid face descriptor format');
-          return res.status(401).json({ message: "Invalid face descriptor format" });
-        }
-        
         console.log(`\nFace verification for user: ${user.email}`);
-        console.log(`Incoming descriptor length: ${faceDescriptor.length}`);
+        console.log(`Incoming descriptor:`, {
+          length: Array.isArray(faceDescriptor) ? faceDescriptor.length : 'not an array',
+          type: typeof faceDescriptor,
+          isArray: Array.isArray(faceDescriptor),
+          firstFewValues: Array.isArray(faceDescriptor) ? faceDescriptor.slice(0, 5) : 'N/A',
+          dataTypes: Array.isArray(faceDescriptor) ? faceDescriptor.slice(0, 10).map((v, i) => `[${i}]=${typeof v}(${v})`) : 'N/A',
+        });
         
-        // Check against stored descriptors
-        let storedDescriptors = user.faceDescriptors as any;
+        // Validate descriptor is array of numbers
+        if (!Array.isArray(faceDescriptor)) {
+          console.warn('Invalid face descriptor - not an array:', { type: typeof faceDescriptor, keys: Object.keys(faceDescriptor || {}) });
+          return res.status(401).json({ message: "Invalid face descriptor format - must be an array" });
+        }
         
-        if (!storedDescriptors) {
-           return res.status(401).json({ message: "No face data registered" });
+        if (faceDescriptor.length !== 128) {
+          console.warn('Invalid face descriptor - wrong length:', { length: faceDescriptor.length });
+          return res.status(401).json({ message: `Invalid face descriptor length - expected 128, got ${faceDescriptor.length}` });
+        }
+        
+        const invalidIndices = faceDescriptor
+          .map((v, i) => ({ value: v, type: typeof v, index: i }))
+          .filter(({ type, value }) => type !== 'number' || !isFinite(value));
+        
+        if (invalidIndices.length > 0) {
+          console.warn('Invalid face descriptor - non-number values:', invalidIndices.slice(0, 5));
+          return res.status(401).json({ message: `Invalid face descriptor format - contains non-numeric values at indices: ${invalidIndices.slice(0, 3).map(i => i.index).join(', ')}` });
+        }
+        
+        console.log('✅ Face descriptor validation passed');
+
+        // Use Amazon Rekognition for face verification
+        const capturedImage = req.body.faceImage as string | undefined;
+        if (!capturedImage) {
+          return res.status(401).json({ message: "Face image is required for biometric verification" });
         }
 
-        // Normalize to array of arrays
-        if (Array.isArray(storedDescriptors) && storedDescriptors.length > 0 && typeof storedDescriptors[0] === 'number') {
-           storedDescriptors = [storedDescriptors];
+        // Get stored face image from user (stored during signup)
+        const storedFaceImage = (user as any).faceImage as string | undefined;
+        if (!storedFaceImage) {
+          console.warn("⚠️  No stored face image found for user");
+          return res.status(401).json({ message: "Face registration incomplete. Please sign up again with face capture." });
         }
 
-        if (!Array.isArray(storedDescriptors) || storedDescriptors.length === 0) {
-           console.error('Invalid stored descriptors:', storedDescriptors);
-           return res.status(401).json({ message: "Invalid face data" });
-        }
+        try {
+          const { verifyFaceWithRekognition } = await import("./services/rekognitionService");
+          const result = await verifyFaceWithRekognition(storedFaceImage, capturedImage);
+          console.log("Rekognition verification result:", result);
 
-        console.log(`Checking against ${storedDescriptors.length} stored descriptor(s)`);
-
-        // Check if ANY stored descriptor matches the login descriptor
-        let match = false;
-        let bestDistance = 1.0;
-        
-        for (let i = 0; i < storedDescriptors.length; i++) {
-          const stored = storedDescriptors[i];
-          // Ensure stored is array
-          if (Array.isArray(stored)) {
-            const distance = euclideanDistance(stored, faceDescriptor);
-            bestDistance = Math.min(bestDistance, distance);
-            
-            if (distance < 0.6) {
-              match = true;
-              console.log(`✓ Face match found at index ${i}`);
-              break;
-            }
+          if (result.success && result.isMatch) {
+            console.log(`✓ AWS Rekognition: Faces match (similarity: ${result.similarity?.toFixed(2)}%)`);
+            // Proceed to login - face verified!
           } else {
-            console.warn(`Stored descriptor at index ${i} is not an array:`, typeof stored);
+            console.log(`✗ AWS Rekognition: Faces do not match`);
+            return res.status(401).json({ message: "Biometric verification failed. Your face did not match. Please try again." });
           }
-        }
-
-        if (!match) {
-          console.log(`✗ Face verification failed. Best distance: ${bestDistance.toFixed(4)} (threshold: 0.6)`);
-          return res.status(401).json({ message: "Face verification failed" });
+        } catch (err) {
+          console.error("Face verification error:", err);
+          return res.status(401).json({ message: "Biometric verification failed. Please try again." });
         }
       }
 
@@ -268,10 +284,9 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Email already exists" });
       }
 
-      // Auto-approve admin (or seed one). 
-      // If email is admin@example.com, make it admin and approved.
-      // Else, default student/verifier and not approved.
-      
+      // Approval logic:
+      // - Admin emails are always approved
+      // - All other accounts require manual admin approval
       const hashedPassword = await hashPassword(input.password);
       let role = input.role;
       let isApproved = false;
@@ -281,6 +296,7 @@ export async function registerRoutes(
         role = 'admin';
         isApproved = true;
       }
+      // Do not auto-approve students or verifiers here. Admin must approve.
 
       const user = await storage.createUser({
         ...input,
@@ -288,6 +304,7 @@ export async function registerRoutes(
         role: role as "admin" | "student" | "verifier",
         isApproved,
         faceDescriptors: input.faceDescriptor ? [input.faceDescriptor] : null,
+        faceImage: input.faceImage || null, // Store the face image for Azure verification
       });
 
       // Log signup activity
@@ -336,7 +353,7 @@ export async function registerRoutes(
 
   app.post(api.admin.approveUser.path, async (req, res) => {
     if (!req.isAuthenticated() || (req.user as any).role !== 'admin') return res.status(401).json({ message: "Unauthorized" });
-    const user = await storage.updateUserApproval(Number(req.params.id as string), true);
+    const user = await storage.updateUserApproval(req.params.id as string, true);
     
     // Log approval activity
     const admin = req.user as any;
@@ -369,17 +386,23 @@ export async function registerRoutes(
       });
     }
 
-    // Simulate Blockchain Hash
+    // Generate unique blockchain identifiers with block number
+    const blockNumber = Math.floor(Math.random() * 1000000) + 12000000; // Realistic blockchain block number
     const blockHash = "0x" + Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join("");
     const previousHash = "0x" + Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join("");
     const txHash = "0x" + Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join("");
+    const qrCode = `CERT-${input.rollNumber}-BLK${blockNumber}-${Date.now()}`;
 
     const cert = await storage.createCertificate({
       ...input,
+      blockNumber,
       blockHash,
       previousHash,
-      txHash
+      txHash,
+      qrCode
     });
+
+    console.log(`✓ Certificate issued - Block #${blockNumber} | Roll: ${input.rollNumber} | Cert ID: ${cert.id}`);
 
     // Log certificate issuance activity
     const admin = req.user as any;
@@ -390,10 +413,103 @@ export async function registerRoutes(
       admin.email,
       'admin',
       `Issued certificate to ${input.name} (${input.rollNumber})`,
-      { certificateId: cert.id, studentId: input.studentId, rollNumber: input.rollNumber, txHash: cert.txHash }
+      { certificateId: cert.id, studentId: input.studentId, rollNumber: input.rollNumber, txHash: cert.txHash, blockNumber }
     );
 
     res.status(201).json(cert);
+  });
+
+  // Block/Deactivate User Account
+  app.post(api.admin.blockUser.path, async (req, res) => {
+    if (!req.isAuthenticated() || (req.user as any).role !== 'admin') return res.status(401).json({ message: "Unauthorized" });
+    
+    const userId = parseInt(req.params.id);
+    const user = await storage.getUser(userId);
+    
+    if (!user) return res.status(404).json({ message: "User not found" });
+    
+    await (storage as any).updateUserStatus(userId, false); // isActive = false
+    
+    // Log activity
+    const admin = req.user as any;
+    await (storage as any).logActivity(
+      'user_blocked',
+      admin.id,
+      admin.fullName,
+      admin.email,
+      'admin',
+      `Blocked user account: ${user.email} (${user.role})`,
+      { userId, userRole: user.role }
+    );
+    
+    res.json({ ...user, isApproved: false, message: "User account has been blocked" });
+  });
+
+  // Unblock User Account
+  app.post(api.admin.unblockUser.path, async (req, res) => {
+    if (!req.isAuthenticated() || (req.user as any).role !== 'admin') return res.status(401).json({ message: "Unauthorized" });
+    
+    const userId = parseInt(req.params.id);
+    const user = await storage.getUser(userId);
+    
+    if (!user) return res.status(404).json({ message: "User not found" });
+    
+    await (storage as any).updateUserStatus(userId, true); // isActive = true
+    
+    // Log activity
+    const admin = req.user as any;
+    await (storage as any).logActivity(
+      'user_unblocked',
+      admin.id,
+      admin.fullName,
+      admin.email,
+      'admin',
+      `Unblocked user account: ${user.email} (${user.role})`,
+      { userId, userRole: user.role }
+    );
+    
+    res.json({ ...user, message: "User account has been restored" });
+  });
+
+  // Get Students by Batch Year
+  app.get(api.admin.getStudentsByBatch.path, async (req, res) => {
+    if (!req.isAuthenticated() || (req.user as any).role !== 'admin') return res.status(401).json({ message: "Unauthorized" });
+    
+    const year = parseInt(req.params.year);
+    const allUsers = await storage.getAllUsers();
+    
+    // Filter students by joining year
+    const studentsByBatch = allUsers.filter(u => 
+      u.role === 'student' && u.joinedYear === year
+    );
+    
+    res.json(studentsByBatch);
+  });
+
+  // Revoke Certificate
+  app.post(api.admin.revokeCertificate.path, async (req, res) => {
+    if (!req.isAuthenticated() || (req.user as any).role !== 'admin') return res.status(401).json({ message: "Unauthorized" });
+    
+    const certId = parseInt(req.params.id);
+    const cert = await storage.getCertificateById(certId);
+    
+    if (!cert) return res.status(404).json({ message: "Certificate not found" });
+    
+    await (storage as any).revokeCertificate(certId);
+    
+    // Log activity
+    const admin = req.user as any;
+    await (storage as any).logActivity(
+      'certificate_revoked',
+      admin.id,
+      admin.fullName,
+      admin.email,
+      'admin',
+      `Revoked certificate: ${cert.rollNumber} (ID: ${certId})`,
+      { certificateId: certId, rollNumber: cert.rollNumber }
+    );
+    
+    res.json({ ...cert, isActive: false, message: "Certificate has been revoked" });
   });
 
   // Download Certificate PDF
@@ -402,7 +518,7 @@ export async function registerRoutes(
       if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
       
       const certId = req.params.id as string;
-      const cert = await storage.getCertificateById(Number(certId));
+      const cert = await storage.getCertificateById(certId);
       
       if (!cert) {
         return res.status(404).json({ message: "Certificate not found" });
@@ -454,11 +570,28 @@ export async function registerRoutes(
   // Student Routes
   app.get(api.student.myCertificates.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
-    // Assuming student can only see their own.
-    // For simplicity, we assume req.user.id is the studentId if user is student.
-    // Wait, schema certificates.studentId refers to users.id? Yes.
-    const certs = await storage.getCertificatesByStudentId((req.user as any).id);
-    res.json(certs);
+    
+    const student = req.user as any;
+    
+    // Get certificates by studentId
+    const certsByStudentId = await storage.getCertificatesByStudentId(student.id);
+    
+    // ALSO: Get certificates by roll number (for newly created accounts where studentId might not match)
+    // This ensures certificates are visible even if issued before account creation
+    let certsByRollNumber: any[] = [];
+    if (student.rollNumber) {
+      certsByRollNumber = await storage.getCertificateByRollNumber(student.rollNumber) || [];
+    }
+    
+    // Merge both arrays and deduplicate by certificate ID
+    const allCerts = [...certsByStudentId, ...certsByRollNumber];
+    const uniqueCerts = Array.from(
+      new Map(allCerts.map((cert: any) => [cert.id, cert])).values()
+    );
+    
+    console.log(`📜 Student ${student.email} retrieved ${uniqueCerts.length} certificate(s) (${certsByStudentId.length} by ID, ${certsByRollNumber.length} by roll number)`);
+    
+    res.json(uniqueCerts);
   });
 
   // Verifier Routes

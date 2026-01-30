@@ -17,7 +17,7 @@ export function useAuth() {
     retry: false,
   });
 
-  const loginMutation = useMutation({
+    const loginMutation = useMutation({
     mutationFn: async (credentials: LoginRequest) => {
       const res = await fetch(api.auth.login.path, {
         method: api.auth.login.method,
@@ -26,9 +26,17 @@ export function useAuth() {
       });
 
       if (!res.ok) {
-        if (res.status === 401) throw new Error("Invalid credentials");
-        throw new Error("Login failed");
+        // parse body for friendly error messages (413, 400, 401)
+        try {
+          const err = await res.json();
+          if (res.status === 401) throw new Error(err.message || "Invalid credentials");
+          throw new Error(err.message || "Login failed");
+        } catch {
+          if (res.status === 401) throw new Error("Invalid credentials");
+          throw new Error("Login failed");
+        }
       }
+
       return api.auth.login.responses[200].parse(await res.json());
     },
     onSuccess: (user) => {
