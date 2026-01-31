@@ -68,7 +68,7 @@ export default function Login() {
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                 <GraduationCap className="w-6 h-6 text-background" />
               </div>
-              <span className="font-bold text-lg text-primary group-hover:text-secondary transition">🎓 Credential Verification</span>
+              <span className="font-bold text-lg text-primary group-hover:text-secondary transition">AI-Based Decentralised Academic Credential Verification System</span>
             </div>
           </Link>
           <div className="flex items-center gap-4">
@@ -208,7 +208,7 @@ export default function Login() {
       {/* Modern Footer */}
       <footer className="bg-gradient-to-r from-background via-muted/10 to-background border-t border-primary/10 py-8">
         <div className="max-w-7xl mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>© 2026 AI-Based Credential Verification System. Built with ❤️ | <Link href="/" className="text-primary hover:text-secondary transition">🏠 Back to Home</Link></p>
+          <p>© 2026 AI-Based Credential Verification System.| <Link href="/" className="text-primary hover:text-secondary transition">Back to Home</Link></p>
         </div>
       </footer>
     </div>
