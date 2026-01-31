@@ -146,12 +146,12 @@ export default function Home() {
                 viewport={{ once: true, amount: 0.2 }}
                 whileHover={{ y: -8 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="p-8 rounded-2xl bg-gradient-to-br from-green-50/40 dark:from-green-950/20 to-background border border-green-200/30 dark:border-green-800/30 hover:border-green-400/60"
+                className="p-8 rounded-2xl bg-gradient-to-br from-green-50/40 dark:from-blue-950/20 to-background border border-green-200/30 dark:border-green-800/30 hover:border-blue-400/60"
               >
                 <div className="flex flex-col h-full group">
                   {/* Icon */}
-                  <div className="mb-6 w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-green-500/10 to-green-400/10">
-                    <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400 transition-transform duration-300" />
+                  <div className="mb-6 w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-blue-500/10 to-green-400/10">
+                    <CheckCircle className="w-8 h-8 text-green-600 dark:text-blue-400 transition-transform duration-300" />
                   </div>
 
                   {/* Title */}
