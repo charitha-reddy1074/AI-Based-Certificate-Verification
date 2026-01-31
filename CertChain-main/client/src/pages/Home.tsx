@@ -114,12 +114,13 @@ export default function Home() {
                 viewport={{ once: true, amount: 0.2 }}
                 whileHover={{ y: -8 }}
                 transition={{ duration: 0.5 }}
-                className="p-8 rounded-2xl bg-gradient-to-br from-blue-50/40 dark:from-blue-950/20 to-background border border-blue-200/30 dark:border-blue-800/30 hover:border-blue-400/60"
+                // Use same base styles as FeatureCard but with subtle blue accent (colors taken from FeatureCard palette)
+                className="p-8 rounded-2xl bg-gradient-to-br from-card/80 to-background border border-border/60 hover:border-primary/50 shadow-sm hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
               >
                 <div className="flex flex-col h-full group">
                   {/* Icon */}
-                  <div className="mb-6 w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-blue-500/10 to-blue-400/10">
-                    <GraduationCap className="w-8 h-8 text-blue-600 dark:text-blue-400 transition-transform duration-300" />
+                  <div className="mb-6 w-16 h-16 rounded-xl flex items-center justify-center transition-transform duration-300 bg-gradient-to-br from-primary/10 to-secondary/10">
+                    <GraduationCap className="w-8 h-8 text-primary dark:text-secondary transition-transform duration-300" />
                   </div>
 
                   {/* Title */}
@@ -134,8 +135,13 @@ export default function Home() {
                   </p>
 
                   {/* Call to Action */}
-                  <motion.div className="mt-6 flex items-center gap-2 text-blue-600 dark:text-blue-400 font-semibold opacity-100">
-                                      </motion.div>
+                  <motion.div className="mt-6 flex items-center gap-2 text-primary dark:text-secondary font-semibold opacity-100">
+                    <Link href="/signup">
+                      <Button size="sm" className="bg-primary text-background">
+                        Get Started
+                      </Button>
+                    </Link>
+                  </motion.div>
                 </div>
               </motion.div>
 
@@ -146,12 +152,13 @@ export default function Home() {
                 viewport={{ once: true, amount: 0.2 }}
                 whileHover={{ y: -8 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="p-8 rounded-2xl bg-gradient-to-br from-green-50/40 dark:from-blue-950/20 to-background border border-green-200/30 dark:border-green-800/30 hover:border-blue-400/60"
+                // Use same base styles as FeatureCard but with subtle green accent (colors taken from FeatureCard palette)
+                className="p-8 rounded-2xl bg-gradient-to-br from-card/80 to-background border border-border/60 hover:border-primary/50 shadow-sm hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
               >
                 <div className="flex flex-col h-full group">
                   {/* Icon */}
-                  <div className="mb-6 w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-blue-500/10 to-green-400/10">
-                    <CheckCircle className="w-8 h-8 text-green-600 dark:text-blue-400 transition-transform duration-300" />
+                  <div className="mb-6 w-16 h-16 rounded-xl flex items-center justify-center transition-transform duration-300 bg-gradient-to-br from-secondary/10 to-primary/10">
+                    <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400 transition-transform duration-300" />
                   </div>
 
                   {/* Title */}
@@ -167,6 +174,11 @@ export default function Home() {
 
                   {/* Call to Action */}
                   <motion.div className="mt-6 flex items-center gap-2 text-green-600 dark:text-green-400 font-semibold opacity-100">
+                    <Link href="/login">
+                      <Button size="sm" variant="outline" className="text-green-600 border-green-200">
+                        Verify Now
+                      </Button>
+                    </Link>
                   </motion.div>
                 </div>
               </motion.div>
