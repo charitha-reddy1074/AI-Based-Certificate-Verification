@@ -14,16 +14,16 @@ export default function Home() {
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
               <GraduationCap className="w-6 h-6 text-background" />
             </div>
-            <span className="font-bold text-lg text-primary tracking-tight">🎓 Credential Verification</span>
+            <span className="font-bold text-lg text-primary tracking-tight">Credential Verification</span>
           </div>
           <div className="flex gap-4 items-center">
             <ThemeToggle />
             <Link href="/login">
-              <Button variant="ghost" className="font-medium text-foreground hover:bg-primary/10">🔐 Login</Button>
+              <Button variant="ghost" className="font-medium text-foreground hover:bg-primary/10">Login</Button>
             </Link>
             <Link href="/signup">
               <Button className="font-medium bg-gradient-to-r from-primary to-secondary text-background hover:opacity-90">
-                📝 Get Started
+                Get Started
               </Button>
             </Link>
           </div>
