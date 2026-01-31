@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { ShieldCheck, GraduationCap, Lock, ArrowRight, CheckCircle, Zap } from "lucide-react";
+import { ShieldCheck, GraduationCap, Lock, ArrowRight, CheckCircle } from "lucide-react";
 
 export default function Home() {
   return (
@@ -14,12 +14,16 @@ export default function Home() {
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
               <GraduationCap className="w-6 h-6 text-background" />
             </div>
-            <span className="font-bold text-lg text-primary tracking-tight">AI-Based Decentralised Academic Credential Verification System</span>
+            <span className="font-bold text-lg text-primary tracking-tight">
+              AI-Based Decentralised Academic Credential Verification System
+            </span>
           </div>
           <div className="flex gap-4 items-center">
             <ThemeToggle />
             <Link href="/login">
-              <Button variant="ghost" className="font-medium text-foreground hover:bg-primary/10">Login</Button>
+              <Button variant="ghost" className="font-medium text-foreground hover:bg-primary/10">
+                Login
+              </Button>
             </Link>
             <Link href="/signup">
               <Button className="font-medium bg-gradient-to-r from-primary to-secondary text-background hover:opacity-90">
@@ -35,30 +39,33 @@ export default function Home() {
         <section className="relative overflow-hidden py-24 sm:py-32">
           <div className="absolute inset-0 -z-10 bg-gradient-to-b from-primary/10 via-background to-background" />
           <div className="absolute top-0 right-0 -z-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" />
-          
+
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
               <h1 className="text-5xl md:text-7xl font-display font-black text-primary mb-6 leading-tight">
                 AI-Based Decentralised Academic Credential Verification System
               </h1>
               <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
-                Powered by simulated blockchain technology and advanced face recognition MFA. 
-                Tamper-proof certificates issued by institutions, verified by employers instantly.
+                Powered by simulated blockchain technology and advanced face recognition MFA. Tamper-proof certificates issued by institutions,
+                verified by employers instantly.
               </p>
-              
+
               <div className="mt-12 flex justify-center gap-4 flex-wrap">
                 <Link href="/signup">
-                  <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-lg shadow-primary/40 bg-primary hover:bg-primary/90 text-background font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-primary/60">
+                  <Button
+                    size="lg"
+                    className="h-14 px-8 text-lg rounded-full shadow-lg shadow-primary/40 bg-primary hover:bg-primary/90 text-background font-semibold transition-all duration-200"
+                  >
                     Create Account
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </Link>
                 <Link href="/login">
-                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 border-primary/50 text-primary hover:bg-primary/10 font-semibold transition-all duration-200">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-14 px-8 text-lg rounded-full border-2 border-primary/50 text-primary hover:bg-primary/10 font-semibold transition-all duration-200"
+                  >
                     Verify Now <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </Link>
@@ -71,21 +78,23 @@ export default function Home() {
         <section className="py-24 bg-background border-t border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-display font-bold text-primary mb-4">Why Choose AI Based Decentralised Academic Credential Verification System?</h2>
+              <h2 className="text-4xl font-display font-bold text-primary mb-4">
+                Why Choose AI Based Decentralised Academic Credential Verification System?
+              </h2>
               <p className="text-muted-foreground text-lg">Enterprise-grade security for academic credentials</p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
-              <FeatureCard 
+              <FeatureCard
                 icon={<ShieldCheck className="w-10 h-10 text-secondary" />}
                 title="Blockchain Security"
                 description="Certificates are hashed and linked in a tamper-proof chain, ensuring absolute authenticity and integrity."
               />
-              <FeatureCard 
+              <FeatureCard
                 icon={<Lock className="w-10 h-10 text-secondary" />}
                 title="Biometric MFA"
                 description="Advanced face recognition technology adds an unbreakable layer of security to student accounts."
               />
-              <FeatureCard 
+              <FeatureCard
                 icon={<GraduationCap className="w-10 h-10 text-secondary" />}
                 title="Instant Verification"
                 description="Verifiers can instantly validate credentials via roll number search, QR code scanning, or API integration."
@@ -93,9 +102,11 @@ export default function Home() {
             </div>
           </div>
         </section>
-{/* Services Cards Grid */}
-       <section> 
-            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+
+        {/* Services Cards Grid */}
+        <section className="py-12">
+          <div className="max-w-4xl mx-auto px-4">
+            <div className="grid md:grid-cols-2 gap-8">
               {/* Left Card - Student Services */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -105,28 +116,27 @@ export default function Home() {
                 transition={{ duration: 0.5 }}
                 className="p-8 rounded-2xl bg-gradient-to-br from-blue-50/40 dark:from-blue-950/20 to-background border border-blue-200/30 dark:border-blue-800/30 hover:border-blue-400/60"
               >
-                <div className="flex flex-col h-full">
+                <div className="flex flex-col h-full group">
                   {/* Icon */}
-                  <div className="mb-6 w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-blue-500/10 to-blue-400/10 group-hover:from-blue-500/20 group-hover:to-blue-400/20 transition-colors duration-300">
-                    <GraduationCap className="w-8 h-8 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300" />
+                  <div className="mb-6 w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-blue-500/10 to-blue-400/10">
+                    <GraduationCap className="w-8 h-8 text-blue-600 dark:text-blue-400 transition-transform duration-300" />
                   </div>
-                  
+
                   {/* Title */}
-                  <h3 className="text-2xl font-bold text-foreground mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                  <h3 className="text-2xl font-bold text-foreground mb-3 transition-colors duration-300">
                     Online Student Services
                   </h3>
-                  
+
                   {/* Description */}
                   <p className="text-muted-foreground leading-relaxed flex-1">
-                    Students can securely access, view, download, and share their verified academic documents anytime, anywhere. Manage your certificates, transcripts, and credentials through a user-friendly dashboard.
+                    Students can securely access, view, download, and share their verified academic documents anytime, anywhere. Manage your
+                    certificates, transcripts, and credentials through a user-friendly dashboard.
                   </p>
-                  
+
                   {/* Call to Action */}
-                  <motion.div
-                    className="mt-6 flex items-center gap-2 text-blue-600 dark:text-blue-400 font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  >
+                  <motion.div className="mt-6 flex items-center gap-2 text-blue-600 dark:text-blue-400 font-semibold opacity-100">
                     <span>Learn more</span>
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                    <ArrowRight className="w-4 h-4 transition-transform duration-300" />
                   </motion.div>
                 </div>
               </motion.div>
@@ -140,34 +150,34 @@ export default function Home() {
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="p-8 rounded-2xl bg-gradient-to-br from-green-50/40 dark:from-green-950/20 to-background border border-green-200/30 dark:border-green-800/30 hover:border-green-400/60"
               >
-                <div className="flex flex-col h-full">
+                <div className="flex flex-col h-full group">
                   {/* Icon */}
-                  <div className="mb-6 w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-green-500/10 to-green-400/10 group-hover:from-green-500/20 group-hover:to-green-400/20 transition-colors duration-300">
-                    <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform duration-300" />
+                  <div className="mb-6 w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-green-500/10 to-green-400/10">
+                    <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400 transition-transform duration-300" />
                   </div>
-                  
+
                   {/* Title */}
-                  <h3 className="text-2xl font-bold text-foreground mb-3 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors duration-300">
+                  <h3 className="text-2xl font-bold text-foreground mb-3 transition-colors duration-300">
                     Verifier Services
                   </h3>
-                  
+
                   {/* Description */}
                   <p className="text-muted-foreground leading-relaxed flex-1">
-                    Authorized verifiers (employers, universities, agencies) can instantly verify student credentials and retrieve authentic details with just a secure link or QR code. Eliminate manual verification delays and reduce fraud.
+                    Authorized verifiers (employers, universities, agencies) can instantly verify student credentials and retrieve authentic details
+                    with just a secure link or QR code. Eliminate manual verification delays and paperwork.
                   </p>
-                  
+
                   {/* Call to Action */}
-                  <motion.div
-                    className="mt-6 flex items-center gap-2 text-green-600 dark:text-green-400 font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  >
+                  <motion.div className="mt-6 flex items-center gap-2 text-green-600 dark:text-green-400 font-semibold opacity-100">
                     <span>Learn more</span>
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                    <ArrowRight className="w-4 h-4 transition-transform duration-300" />
                   </motion.div>
                 </div>
               </motion.div>
             </div>
           </div>
         </section>
+
         {/* Inspirational Section */}
         <section className="py-20 bg-gradient-to-br from-primary/10 via-secondary/10 to-background border-t border-border">
           <div className="max-w-4xl mx-auto px-4 text-center">
@@ -180,13 +190,11 @@ export default function Home() {
               <p className="text-2xl md:text-3xl font-display italic text-foreground leading-relaxed">
                 "Education is the most powerful weapon which you can use to change the world."
               </p>
-              <footer className="text-lg text-muted-foreground font-medium">
-                — Nelson Mandela
-              </footer>
+              <footer className="text-lg text-muted-foreground font-medium">— Nelson Mandela</footer>
             </motion.blockquote>
             <p className="mt-12 text-muted-foreground text-base max-w-2xl mx-auto">
-              AI Based Decentralised Academic Credential Verification System believes in making education credentials secure, verifiable, and universally recognized. 
-              We empower students, institutions, and employers with transparency and trust.
+              AI Based Decentralised Academic Credential Verification System believes in making education credentials secure, verifiable, and
+              universally recognized. We empower students, institutions, and employers with transparency and trust.
             </p>
           </div>
         </section>
@@ -206,8 +214,16 @@ export default function Home() {
             <div>
               <h4 className="font-semibold text-foreground mb-4">Product</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/login" className="hover:text-primary transition">Login</Link></li>
-                <li><Link href="/signup" className="hover:text-primary transition">Sign Up</Link></li>
+                <li>
+                  <Link href="/login" className="hover:text-primary transition">
+                    Login
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/signup" className="hover:text-primary transition">
+                    Sign Up
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
@@ -236,19 +252,25 @@ export default function Home() {
   );
 }
 
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
+function FeatureCard({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4 }}
       transition={{ duration: 0.5 }}
-      className="p-8 rounded-2xl bg-gradient-to-br from-card/80 to-background border border-border/60 hover:border-primary/50 shadow-sm hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 group cursor-pointer"
+      className="p-8 rounded-2xl bg-gradient-to-br from-card/80 to-background border border-border/60 hover:border-primary/50 shadow-sm hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
     >
-      <div className="mb-6 w-16 h-16 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 bg-gradient-to-br from-primary/10 to-secondary/10">
-        <div className="text-secondary group-hover:scale-125 transition-transform duration-300">
-          {icon}
-        </div>
+      <div className="mb-6 w-16 h-16 rounded-xl flex items-center justify-center transition-transform duration-300 bg-gradient-to-br from-primary/10 to-secondary/10">
+        <div className="text-secondary transition-transform duration-300">{icon}</div>
       </div>
       <h3 className="text-xl font-bold mb-3 text-foreground">{title}</h3>
       <p className="text-muted-foreground leading-relaxed text-sm">{description}</p>
