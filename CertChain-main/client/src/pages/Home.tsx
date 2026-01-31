@@ -135,9 +135,7 @@ export default function Home() {
 
                   {/* Call to Action */}
                   <motion.div className="mt-6 flex items-center gap-2 text-blue-600 dark:text-blue-400 font-semibold opacity-100">
-                    <span>Learn more</span>
-                    <ArrowRight className="w-4 h-4 transition-transform duration-300" />
-                  </motion.div>
+                                      </motion.div>
                 </div>
               </motion.div>
 
@@ -169,8 +167,6 @@ export default function Home() {
 
                   {/* Call to Action */}
                   <motion.div className="mt-6 flex items-center gap-2 text-green-600 dark:text-green-400 font-semibold opacity-100">
-                    <span>Learn more</span>
-                    <ArrowRight className="w-4 h-4 transition-transform duration-300" />
                   </motion.div>
                 </div>
               </motion.div>
