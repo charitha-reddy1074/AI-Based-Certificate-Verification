@@ -132,29 +132,29 @@ export default function Home() {
             <div>
               <h4 className="font-semibold text-foreground mb-4">📱 Product</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/login" className="hover:text-primary transition">🔐 Login</Link></li>
-                <li><Link href="/signup" className="hover:text-primary transition">📝 Sign Up</Link></li>
+                <li><Link href="/login" className="hover:text-primary transition">Login</Link></li>
+                <li><Link href="/signup" className="hover:text-primary transition">Sign Up</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-foreground mb-4">⭐ Features</h4>
+              <h4 className="font-semibold text-foreground mb-4">Features</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="hover:text-primary transition cursor-pointer">🔗 Blockchain Security</li>
-                <li className="hover:text-primary transition cursor-pointer">👤 Face Recognition MFA</li>
-                <li className="hover:text-primary transition cursor-pointer">⚡ Instant Verification</li>
+                <li className="hover:text-primary transition cursor-pointer">Blockchain Security</li>
+                <li className="hover:text-primary transition cursor-pointer">Face Recognition MFA</li>
+                <li className="hover:text-primary transition cursor-pointer">Instant Verification</li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold text-foreground mb-4">🏢 Company</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="hover:text-primary transition cursor-pointer">📚 About Us</li>
-                <li className="hover:text-primary transition cursor-pointer">🤝 Partners</li>
-                <li className="hover:text-primary transition cursor-pointer">📧 Contact</li>
+                <li className="hover:text-primary transition cursor-pointer">About Us</li>
+                <li className="hover:text-primary transition cursor-pointer">Partners</li>
+                <li className="hover:text-primary transition cursor-pointer">Contact</li>
               </ul>
             </div>
           </div>
           <div className="border-t border-primary/10 pt-8 text-center">
-            <p className="text-muted-foreground text-sm">© 2026 AI-Based Credential Verification System. Built with ❤️ | All rights reserved</p>
+            <p className="text-muted-foreground text-sm">© 2026 AI-Based Credential Verification System. | All rights reserved</p>
           </div>
         </div>
       </footer>
