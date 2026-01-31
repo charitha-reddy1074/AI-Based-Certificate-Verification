@@ -94,6 +94,7 @@ export default function Home() {
           </div>
         </section>
 {/* Services Cards Grid */}
+       <section> 
             <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
               {/* Left Card - Student Services */}
               <motion.div
