@@ -160,9 +160,9 @@ export default function StudentDashboard() {
             >
               <h4 className="font-semibold text-foreground mb-4">Platform</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="hover:text-primary transition cursor-pointer">📚 My Certificates</li>
-                <li className="hover:text-primary transition cursor-pointer">⚙️ Settings</li>
-                <li className="hover:text-primary transition cursor-pointer">🔒 Security</li>
+                <li className="hover:text-primary transition cursor-pointer">My Certificates</li>
+                <li className="hover:text-primary transition cursor-pointer">Settings</li>
+                <li className="hover:text-primary transition cursor-pointer">Security</li>
               </ul>
             </motion.div>
             <motion.div
@@ -172,9 +172,9 @@ export default function StudentDashboard() {
             >
               <h4 className="font-semibold text-foreground mb-4">Help</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="hover:text-primary transition cursor-pointer">📖 Documentation</li>
-                <li className="hover:text-primary transition cursor-pointer">❓ FAQ</li>
-                <li className="hover:text-primary transition cursor-pointer">💬 Support</li>
+                <li className="hover:text-primary transition cursor-pointer">Documentation</li>
+                <li className="hover:text-primary transition cursor-pointer">FAQ</li>
+                <li className="hover:text-primary transition cursor-pointer">Support</li>
               </ul>
             </motion.div>
             <motion.div
@@ -184,9 +184,9 @@ export default function StudentDashboard() {
             >
               <h4 className="font-semibold text-foreground mb-4">Legal</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="hover:text-primary transition cursor-pointer">📄 Privacy</li>
-                <li className="hover:text-primary transition cursor-pointer">⚖️ Terms</li>
-                <li className="hover:text-primary transition cursor-pointer">🔐 Security</li>
+                <li className="hover:text-primary transition cursor-pointer">Privacy</li>
+                <li className="hover:text-primary transition cursor-pointer">Terms</li>
+                <li className="hover:text-primary transition cursor-pointer">Security</li>
               </ul>
             </motion.div>
             <motion.div
@@ -196,14 +196,14 @@ export default function StudentDashboard() {
             >
               <h4 className="font-semibold text-foreground mb-4">Connect</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="hover:text-primary transition cursor-pointer">🌐 Website</li>
-                <li className="hover:text-primary transition cursor-pointer">📧 Contact</li>
-                <li className="hover:text-primary transition cursor-pointer">🔔 Updates</li>
+                <li className="hover:text-primary transition cursor-pointer">Website</li>
+                <li className="hover:text-primary transition cursor-pointer">Contact</li>
+                <li className="hover:text-primary transition cursor-pointer">Updates</li>
               </ul>
             </motion.div>
           </motion.div>
           <div className="border-t border-primary/10 pt-8 text-center">
-            <p className="text-muted-foreground text-sm">© 2026 AI-Based Credential Verification System. Built with ❤️ | All rights reserved</p>
+            <p className="text-muted-foreground text-sm">© 2026 AI-Based Credential Verification System.| All rights reserved</p>
           </div>
         </div>
       </footer>
