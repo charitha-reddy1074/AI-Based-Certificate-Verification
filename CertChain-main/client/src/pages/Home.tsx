@@ -14,7 +14,7 @@ export default function Home() {
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
               <GraduationCap className="w-6 h-6 text-background" />
             </div>
-            <span className="font-bold text-lg text-primary tracking-tight">Credential Verification</span>
+            <span className="font-bold text-lg text-primary tracking-tight">AI-Based Decentralised Academic Credential Verification System</span>
           </div>
           <div className="flex gap-4 items-center">
             <ThemeToggle />
@@ -43,7 +43,7 @@ export default function Home() {
               transition={{ duration: 0.5 }}
             >
               <h1 className="text-5xl md:text-7xl font-display font-black text-primary mb-6 leading-tight">
-                AI Based Decentralised Academic Credential Verification System
+                AI-Based Decentralised Academic Credential Verification System
               </h1>
               <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
                 Powered by simulated blockchain technology and advanced face recognition MFA. 
