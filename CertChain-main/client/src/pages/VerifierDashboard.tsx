@@ -240,9 +240,9 @@ export default function VerifierDashboard() {
             >
               <h4 className="font-semibold text-foreground mb-4">Verification</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="hover:text-primary transition cursor-pointer">✅ Instant Verification</li>
-                <li className="hover:text-primary transition cursor-pointer">📱 QR Code Scanning</li>
-                <li className="hover:text-primary transition cursor-pointer">⛓️ Blockchain Validation</li>
+                <li className="hover:text-primary transition cursor-pointer">Instant Verification</li>
+                <li className="hover:text-primary transition cursor-pointer">QR Code Scanning</li>
+                <li className="hover:text-primary transition cursor-pointer">Blockchain Validation</li>
               </ul>
             </motion.div>
             <motion.div
@@ -252,9 +252,9 @@ export default function VerifierDashboard() {
             >
               <h4 className="font-semibold text-foreground mb-4">Resources</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="hover:text-primary transition cursor-pointer">📚 Documentation</li>
-                <li className="hover:text-primary transition cursor-pointer">❓ Help Center</li>
-                <li className="hover:text-primary transition cursor-pointer">💬 Contact</li>
+                <li className="hover:text-primary transition cursor-pointer">Documentation</li>
+                <li className="hover:text-primary transition cursor-pointer">Help Center</li>
+                <li className="hover:text-primary transition cursor-pointer">Contact</li>
               </ul>
             </motion.div>
             <motion.div
@@ -264,9 +264,9 @@ export default function VerifierDashboard() {
             >
               <h4 className="font-semibold text-foreground mb-4">Company</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="hover:text-primary transition cursor-pointer">📄 About</li>
-                <li className="hover:text-primary transition cursor-pointer">🤝 Partners</li>
-                <li className="hover:text-primary transition cursor-pointer">📝 Blog</li>
+                <li className="hover:text-primary transition cursor-pointer">About</li>
+                <li className="hover:text-primary transition cursor-pointer">Partners</li>
+                <li className="hover:text-primary transition cursor-pointer">Blog</li>
               </ul>
             </motion.div>
             <motion.div
@@ -276,14 +276,14 @@ export default function VerifierDashboard() {
             >
               <h4 className="font-semibold text-foreground mb-4">Legal</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="hover:text-primary transition cursor-pointer">🔐 Privacy</li>
-                <li className="hover:text-primary transition cursor-pointer">⚖️ Terms</li>
-                <li className="hover:text-primary transition cursor-pointer">🛡️ Security</li>
+                <li className="hover:text-primary transition cursor-pointer">Privacy</li>
+                <li className="hover:text-primary transition cursor-pointer">Terms</li>
+                <li className="hover:text-primary transition cursor-pointer">Security</li>
               </ul>
             </motion.div>
           </motion.div>
           <div className="border-t border-primary/10 pt-8 text-center">
-            <p className="text-muted-foreground text-sm">© 2026 AI-Based Credential Verification System. Built with ❤️ | All rights reserved</p>
+            <p className="text-muted-foreground text-sm">© 2026 AI-Based Credential Verification System.| All rights reserved</p>
           </div>
         </div>
       </footer>
