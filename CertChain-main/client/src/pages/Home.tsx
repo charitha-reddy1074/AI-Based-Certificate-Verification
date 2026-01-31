@@ -130,7 +130,7 @@ export default function Home() {
               <p className="text-muted-foreground text-sm">Secure academic credential verification powered by blockchain.</p>
             </div>
             <div>
-              <h4 className="font-semibold text-foreground mb-4">📱 Product</h4>
+              <h4 className="font-semibold text-foreground mb-4">Product</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><Link href="/login" className="hover:text-primary transition">Login</Link></li>
                 <li><Link href="/signup" className="hover:text-primary transition">Sign Up</Link></li>
@@ -145,7 +145,7 @@ export default function Home() {
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-foreground mb-4">🏢 Company</h4>
+              <h4 className="font-semibold text-foreground mb-4">Company</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="hover:text-primary transition cursor-pointer">About Us</li>
                 <li className="hover:text-primary transition cursor-pointer">Partners</li>
