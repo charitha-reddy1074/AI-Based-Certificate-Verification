@@ -93,7 +93,80 @@ export default function Home() {
             </div>
           </div>
         </section>
+{/* Services Cards Grid */}
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {/* Left Card - Student Services */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                whileHover={{ y: -8 }}
+                transition={{ duration: 0.5 }}
+                className="p-8 rounded-2xl bg-gradient-to-br from-blue-50/40 dark:from-blue-950/20 to-background border border-blue-200/30 dark:border-blue-800/30 hover:border-blue-400/60"
+              >
+                <div className="flex flex-col h-full">
+                  {/* Icon */}
+                  <div className="mb-6 w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-blue-500/10 to-blue-400/10 group-hover:from-blue-500/20 group-hover:to-blue-400/20 transition-colors duration-300">
+                    <GraduationCap className="w-8 h-8 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300" />
+                  </div>
+                  
+                  {/* Title */}
+                  <h3 className="text-2xl font-bold text-foreground mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                    Online Student Services
+                  </h3>
+                  
+                  {/* Description */}
+                  <p className="text-muted-foreground leading-relaxed flex-1">
+                    Students can securely access, view, download, and share their verified academic documents anytime, anywhere. Manage your certificates, transcripts, and credentials through a user-friendly dashboard.
+                  </p>
+                  
+                  {/* Call to Action */}
+                  <motion.div
+                    className="mt-6 flex items-center gap-2 text-blue-600 dark:text-blue-400 font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  >
+                    <span>Learn more</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                  </motion.div>
+                </div>
+              </motion.div>
 
+              {/* Right Card - Verifier Services */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                whileHover={{ y: -8 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="p-8 rounded-2xl bg-gradient-to-br from-green-50/40 dark:from-green-950/20 to-background border border-green-200/30 dark:border-green-800/30 hover:border-green-400/60"
+              >
+                <div className="flex flex-col h-full">
+                  {/* Icon */}
+                  <div className="mb-6 w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-green-500/10 to-green-400/10 group-hover:from-green-500/20 group-hover:to-green-400/20 transition-colors duration-300">
+                    <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform duration-300" />
+                  </div>
+                  
+                  {/* Title */}
+                  <h3 className="text-2xl font-bold text-foreground mb-3 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors duration-300">
+                    Verifier Services
+                  </h3>
+                  
+                  {/* Description */}
+                  <p className="text-muted-foreground leading-relaxed flex-1">
+                    Authorized verifiers (employers, universities, agencies) can instantly verify student credentials and retrieve authentic details with just a secure link or QR code. Eliminate manual verification delays and reduce fraud.
+                  </p>
+                  
+                  {/* Call to Action */}
+                  <motion.div
+                    className="mt-6 flex items-center gap-2 text-green-600 dark:text-green-400 font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  >
+                    <span>Learn more</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                  </motion.div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
         {/* Inspirational Section */}
         <section className="py-20 bg-gradient-to-br from-primary/10 via-secondary/10 to-background border-t border-border">
           <div className="max-w-4xl mx-auto px-4 text-center">
