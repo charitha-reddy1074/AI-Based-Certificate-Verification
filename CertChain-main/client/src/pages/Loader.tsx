@@ -174,7 +174,7 @@ export default function Loader() {
             }}
             transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
           >
-            Verification
+            Verification System
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}
@@ -182,7 +182,7 @@ export default function Loader() {
             transition={{ delay: 0.6, duration: 0.8 }}
             className="text-xl md:text-2xl text-muted-foreground font-semibold tracking-wide"
           >
-            🔐 Secured by Blockchain & AI
+            Secured by Blockchain & AI
           </motion.p>
         </motion.div>
 
@@ -239,7 +239,7 @@ export default function Loader() {
               transition={{ duration: 1.8, repeat: Infinity }}
               className="text-sm font-medium text-muted-foreground"
             >
-              🚀 Initializing System
+              Initializing System
             </motion.span>
             <motion.span
               animate={{ 
@@ -262,9 +262,9 @@ export default function Loader() {
           className="grid grid-cols-3 gap-3 w-full max-w-md mx-auto"
         >
           {[
-            { text: "🔒 Secure", icon: Shield },
-            { text: "⚡ Fast", icon: Zap },
-            { text: "✅ Verified", icon: Lock }
+            { text: "Secure", icon: Shield },
+            { text: "Fast", icon: Zap },
+            { text: "Verified", icon: Lock }
           ].map((feature, i) => (
             <motion.div
               key={feature.text}
