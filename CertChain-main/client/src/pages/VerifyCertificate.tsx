@@ -348,7 +348,7 @@ export default function VerifyCertificate() {
       <footer className="bg-gradient-to-r from-background via-muted/10 to-background border-t border-primary/10 py-8 mt-12">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <p className="text-muted-foreground text-sm">
-            © 2026 AI-Based Credential Verification System. Built with ❤️ | All rights reserved
+            © 2026 AI-Based Credential Verification System.| All rights reserved
           </p>
         </div>
       </footer>
