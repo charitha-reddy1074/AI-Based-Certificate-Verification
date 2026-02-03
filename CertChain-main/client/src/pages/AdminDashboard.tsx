@@ -535,6 +535,7 @@ export default function AdminDashboard() {
                     <Controller
                       name="branch"
                       control={control}
+                      defaultValue=""
                       rules={{ required: true }}
                       render={({ field }) => (
                         <Select onValueChange={field.onChange} value={field.value || ""}>
@@ -801,10 +802,20 @@ export default function AdminDashboard() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => downloadCertificate.mutate(cert.id)}
+                                disabled={downloadCertificate.isPending}
                                 className="text-xs"
                               >
-                                <Download className="w-3 h-3 mr-1" />
-                                Download
+                                {downloadCertificate.isPending ? (
+                                  <>
+                                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                    Downloading...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Download className="w-3 h-3 mr-1" />
+                                    Download
+                                  </>
+                                )}
                               </Button>
                             </td>
                           </motion.tr>
