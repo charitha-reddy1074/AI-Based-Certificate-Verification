@@ -1,4 +1,4 @@
-
+(imports and top of file unchanged...)
 import { db, initDb } from "./db";
 import { users, certificates, verifierUnlocks, type User, type Certificate, type VerifierUnlock, insertUserSchema, insertCertificateSchema } from "@shared/schema";
 import type { z } from "zod";
@@ -265,10 +265,66 @@ export class MemoryStorage implements IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // -- MINIMAL, TARGETED FIXES START --
+  // Helper that attempts to retrieve a user document safely when the caller may pass a numeric id
+  // or an ObjectId string. This prevents Mongoose from attempting to cast a numeric value to ObjectId.
+  private async findUserFlexible(id: number | string) {
+    const idStr = String(id);
+    // If id looks like an ObjectId, try that first
+    if (/^[0-9a-fA-F]{24}$/.test(idStr)) {
+      try {
+        const byOid = await UserModel.findById(idStr).exec();
+        if (byOid) return byOid;
+      } catch (_) { /* ignore cast errors */ }
+    }
+
+    // If id is numeric (from Postgres/memory storage), try lookup by a numeric `id` field (if present)
+    if (!Number.isNaN(Number(idStr))) {
+      try {
+        const byNumeric = await UserModel.findOne({ id: Number(idStr) }).exec();
+        if (byNumeric) return byNumeric;
+      } catch (_) { /* ignore */ }
+    }
+
+    // Fallback: try treating it as a string _id (some documents may have string _id)
+    try {
+      const byStringId = await UserModel.findOne({ _id: idStr }).exec();
+      if (byStringId) return byStringId;
+    } catch (_) { /* ignore */ }
+
+    return null;
+  }
+
+  // Helper that attempts to retrieve a certificate document safely for similar reasons
+  private async findCertificateFlexible(id: number | string) {
+    const idStr = String(id);
+    if (/^[0-9a-fA-F]{24}$/.test(idStr)) {
+      try {
+        const byOid = await CertificateModel.findById(idStr).exec();
+        if (byOid) return byOid;
+      } catch (_) { /* ignore */ }
+    }
+
+    if (!Number.isNaN(Number(idStr))) {
+      try {
+        const byNumeric = await CertificateModel.findOne({ id: Number(idStr) }).exec();
+        if (byNumeric) return byNumeric;
+      } catch (_) { /* ignore */ }
+    }
+
+    try {
+      const byStringId = await CertificateModel.findOne({ _id: idStr }).exec();
+      if (byStringId) return byStringId;
+    } catch (_) { /* ignore */ }
+
+    return null;
+  }
+  // -- MINIMAL, TARGETED FIXES END --
+
   async getUser(id: number): Promise<User | undefined> {
     try {
-      // In MongoDB, we find by email-based ID or _id
-      const mongoUser = await UserModel.findById(id);
+      // Use the flexible finder instead of passing raw number to findById
+      const mongoUser = await this.findUserFlexible(id);
       if (!mongoUser) return undefined;
       return this.mongoToUser(mongoUser);
     } catch (err) {
@@ -315,12 +371,13 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserApproval(id: string, isApproved: boolean): Promise<User> {
     try {
-      const mongoUser = await UserModel.findByIdAndUpdate(
-        id,
-        { isApproved },
-        { new: true }
-      );
-      if (!mongoUser) throw new Error("User not found");
+      // Use flexible finder to avoid casting errors
+      const existing = await this.findUserFlexible(id);
+      if (!existing) throw new Error("User not found");
+
+      // update the found document using its _id
+      const mongoUser = await UserModel.findByIdAndUpdate(existing._id, { isApproved }, { new: true });
+      if (!mongoUser) throw new Error("User not found after update");
       return this.mongoToUser(mongoUser);
     } catch (err) {
       console.error('Error updateUserApproval:', err);
@@ -378,9 +435,9 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getCertificateById(id: string): Promise<Certificate | undefined> {
+  async getCertificateById(id: number): Promise<Certificate | undefined> {
     try {
-      const mongoCert = await CertificateModel.findById(id);
+      const mongoCert = await this.findCertificateFlexible(id);
       if (!mongoCert) return undefined;
       return this.mongoToCertificate(mongoCert);
     } catch (err) {
@@ -390,7 +447,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCertificate(id: number): Promise<Certificate | undefined> {
-    return this.getCertificateById(String(id));
+    return this.getCertificateById(Number(id));
   }
 
   async getAllCertificates(): Promise<Certificate[]> {
@@ -403,11 +460,11 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async createUnlock(verifierId: string, certificateId: string): Promise<VerifierUnlock> {
+  async createUnlock(verifierId: number, certificateId: number): Promise<VerifierUnlock> {
     try {
       const mongoUnlock = await UnlockModel.create({
-        verifierId,
-        certificateId,
+        verifierId: String(verifierId),
+        certificateId: String(certificateId),
         paidAmount: 10,
       });
       return this.mongoToUnlock(mongoUnlock);
@@ -417,12 +474,45 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getUnlockedCertificates(verifierId: string): Promise<Certificate[]> {
+  async getUnlockedCertificates(verifierId: number): Promise<Certificate[]> {
     try {
-      const unlocks = await UnlockModel.find({ verifierId });
+      // find unlocks matching verifierId as string or number
+      const asString = String(verifierId);
+      const asNumber = !Number.isNaN(Number(verifierId)) ? Number(verifierId) : null;
+
+      const unlocks = await UnlockModel.find(
+        asNumber !== null ? { $or: [{ verifierId: asString }, { verifierId: asNumber }] } : { verifierId: asString }
+      ).exec();
+
       const certificateIds = unlocks.map(u => u.certificateId);
-      const mongoCerts = await CertificateModel.find({ _id: { $in: certificateIds } });
-      return mongoCerts.map(c => this.mongoToCertificate(c));
+
+      if (!certificateIds || certificateIds.length === 0) return [];
+
+      // Determine whether certificateIds look numeric or ObjectId strings and query accordingly
+      const numericIds = certificateIds.filter(cid => !Number.isNaN(Number(cid))).map(Number);
+      const oidIds = certificateIds.filter(cid => /^[0-9a-fA-F]{24}$/.test(String(cid))).map(String);
+
+      let mongoCerts: any[] = [];
+      if (oidIds.length > 0) {
+        // query by _id for OIDs
+        mongoCerts = await CertificateModel.find({ _id: { $in: oidIds } }).exec();
+      }
+      if (numericIds.length > 0) {
+        // also try numeric id field lookup (if certificates stored with numeric `id`)
+        const byNumeric = await CertificateModel.find({ id: { $in: numericIds } }).exec();
+        mongoCerts = mongoCerts.concat(byNumeric);
+      }
+
+      // remove duplicates
+      const seen = new Set();
+      const unique = mongoCerts.filter(c => {
+        const key = String(c._id || c.id);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      return unique.map(c => this.mongoToCertificate(c));
     } catch (err) {
       console.error('Error getUnlockedCertificates:', err);
       return [];
@@ -431,7 +521,20 @@ export class DatabaseStorage implements IStorage {
 
   async isCertificateUnlocked(verifierId: number, certificateId: number): Promise<boolean> {
     try {
-      const unlock = await UnlockModel.findOne({ verifierId, certificateId });
+      const asStringVerifier = String(verifierId);
+      const asNumberVerifier = !Number.isNaN(Number(verifierId)) ? Number(verifierId) : null;
+      const asStringCert = String(certificateId);
+      const asNumberCert = !Number.isNaN(Number(certificateId)) ? Number(certificateId) : null;
+
+      const queries: any[] = [];
+
+      // combinations to check
+      queries.push({ verifierId: asStringVerifier, certificateId: asStringCert });
+      if (asNumberVerifier !== null) queries.push({ verifierId: asNumberVerifier, certificateId: asStringCert });
+      if (asNumberCert !== null) queries.push({ verifierId: asStringVerifier, certificateId: asNumberCert });
+      if (asNumberVerifier !== null && asNumberCert !== null) queries.push({ verifierId: asNumberVerifier, certificateId: asNumberCert });
+
+      const unlock = await UnlockModel.findOne({ $or: queries }).exec();
       return !!unlock;
     } catch (err) {
       console.error('Error isCertificateUnlocked:', err);
@@ -623,11 +726,10 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserStatus(userId: number, isActive: boolean): Promise<User> {
     try {
-      const mongoUser = await UserModel.findByIdAndUpdate(
-        userId,
-        { isApproved: isActive },
-        { new: true }
-      );
+      // resolve user first using flexible finder to avoid numeric -> ObjectId cast errors
+      const userDoc = await this.findUserFlexible(userId);
+      if (!userDoc) throw new Error("User not found");
+      const mongoUser = await UserModel.findByIdAndUpdate(userDoc._id, { isApproved: isActive }, { new: true });
       if (!mongoUser) throw new Error("User not found");
       return this.mongoToUser(mongoUser);
     } catch (err) {
@@ -638,11 +740,9 @@ export class DatabaseStorage implements IStorage {
 
   async revokeCertificate(certId: number): Promise<Certificate> {
     try {
-      const mongoCert = await CertificateModel.findByIdAndUpdate(
-        certId,
-        { isActive: false },
-        { new: true }
-      );
+      const certDoc = await this.findCertificateFlexible(certId);
+      if (!certDoc) throw new Error("Certificate not found");
+      const mongoCert = await CertificateModel.findByIdAndUpdate(certDoc._id, { isActive: false }, { new: true });
       if (!mongoCert) throw new Error("Certificate not found");
       return this.mongoToCertificate(mongoCert);
     } catch (err) {
@@ -654,95 +754,7 @@ export class DatabaseStorage implements IStorage {
 
 // Old DatabaseStorage implementation (PostgreSQL/Drizzle) - commented out as fallback
 /*
-export class DatabaseStorage implements IStorage {
-  async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
-  }
-
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user;
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
-    return user;
-  }
-
-  async updateUserApproval(id: string, isApproved: boolean): Promise<User> {
-    const [user] = await db.update(users)
-      .set({ isApproved })
-      .where(eq(users.id, parseInt(id)))
-      .returning();
-    return user;
-  }
-
-  async getPendingUsers(): Promise<User[]> {
-    return db.select().from(users).where(eq(users.isApproved, false));
-  }
-
-  async getAllUsers(): Promise<User[]> {
-    return db.select().from(users);
-  }
-
-  async createCertificate(cert: InsertCertificate): Promise<Certificate> {
-    const [certificate] = await db.insert(certificates).values(cert).returning();
-    return certificate;
-  }
-
-  async getCertificatesByStudentId(studentId: number): Promise<Certificate[]> {
-    return db.select().from(certificates).where(eq(certificates.studentId, studentId));
-  }
-
-  async getCertificateByRollNumber(rollNumber: string): Promise<Certificate[]> {
-    return db.select().from(certificates).where(eq(certificates.rollNumber, rollNumber));
-  }
-
-  async getCertificateById(id: string): Promise<Certificate | undefined> {
-    const [cert] = await db.select().from(certificates).where(eq(certificates.id, Number(id)));
-    return cert;
-  }
-
-  async getCertificate(id: string): Promise<Certificate | undefined> {
-    const [cert] = await db.select().from(certificates).where(eq(certificates.id, Number(id)));
-    return cert;
-  }
-
-  async getAllCertificates(): Promise<Certificate[]> {
-    return db.select().from(certificates);
-  }
-
-  async createUnlock(verifierId: string, certificateId: string): Promise<VerifierUnlock> {
-    const [unlock] = await db.insert(verifierUnlocks).values({
-      verifierId: Number(verifierId),
-      certificateId: Number(certificateId),
-      paidAmount: 10,
-    }).returning();
-    return unlock;
-  }
-
-  async getUnlockedCertificates(verifierId: string): Promise<Certificate[]> {
-    const results = await db.select({
-      certificate: certificates
-    })
-    .from(verifierUnlocks)
-    .innerJoin(certificates, eq(verifierUnlocks.certificateId, certificates.id))
-    .where(eq(verifierUnlocks.verifierId, verifierId));
-
-    return results.map((r: { certificate: Certificate }) => r.certificate);
-  }
-
-  async isCertificateUnlocked(verifierId: number, certificateId: number): Promise<boolean> {
-    const [unlock] = await db.select()
-      .from(verifierUnlocks)
-      .where(and(
-        eq(verifierUnlocks.verifierId, verifierId),
-        eq(verifierUnlocks.certificateId, certificateId)
-      ));
-    return !!unlock;
-  }
-}
+...
 */
 
 // Initialize storage - use memory storage if DB is unavailable
