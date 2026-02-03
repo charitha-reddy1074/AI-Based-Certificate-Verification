@@ -669,7 +669,7 @@ export async function registerRoutes(
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
       
-      const certId = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+      const certId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const cert = await storage.getCertificateById(certId);
       
       if (!cert) {
