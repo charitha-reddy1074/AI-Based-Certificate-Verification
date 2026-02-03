@@ -151,9 +151,15 @@ export default function VerifierDashboard() {
         {/* Unlocked Certificates */}
         <section>
           <h3 className="text-2xl font-bold mb-6 border-b border-border pb-2 text-foreground">Previously Verified</h3>
-          <div className="grid md:grid-cols-2 gap-8">
-            {unlockedCertificates.data?.map((cert) => (
-              <motion.div key={cert.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="group relative">
+          <div className="space-y-6">
+            {unlockedCertificates.data?.map((cert, idx) => (
+              <motion.div 
+                key={cert.id} 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                className="group relative"
+              >
                 <CertificateCard certificate={cert} />
                 <div className="mt-4 space-y-4">
                   {cert.txHash && (
