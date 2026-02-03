@@ -25,7 +25,6 @@ export const api = {
     blockUser: { method: 'POST' as const, path: '/api/admin/users/:id/block', responses: { 200: z.custom<typeof users.$inferSelect>() } },
     unblockUser: { method: 'POST' as const, path: '/api/admin/users/:id/unblock', responses: { 200: z.custom<typeof users.$inferSelect>() } },
     getStudentsByBatch: { method: 'GET' as const, path: '/api/admin/students/batch/:year', responses: { 200: z.array(z.custom<typeof users.$inferSelect>()) } },
-    getAllUsers: { method: 'GET' as const, path: '/api/admin/users/all', responses: { 200: z.array(z.custom<typeof users.$inferSelect>()) } },
     getAllCertificates: { method: 'GET' as const, path: '/api/admin/certificates/all', responses: { 200: z.array(z.custom<typeof certificates.$inferSelect>()) } },
     issueCertificate: { method: 'POST' as const, path: '/api/admin/certificates', input: z.object({
       studentId: z.union([z.number(), z.string()]).pipe(z.coerce.number()),
@@ -75,7 +74,7 @@ export const api = {
           totalPaymentsAmount: z.number(),
           accessLogs: z.array(z.object({
             id: z.string(),
-            verifier: z.object({ id: z.any(), fullName: z.string(), email: z.string(), role: z.string() }),
+            verifier: z.object({ id: z.any(), fullName: z.string(), email: z.string() }),
             certificateId: z.any(),
             studentInfo: z.object({ id: z.any(), fullName: z.string(), email: z.string() }),
             accessTime: z.string(),

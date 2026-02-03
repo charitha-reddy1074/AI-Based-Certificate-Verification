@@ -586,49 +586,20 @@ export async function registerRoutes(
     res.json({ ...user, message: "User account has been restored" });
   });
 
-  // Get All Users
-  app.get(api.admin.getAllUsers.path, async (req, res) => {
-    if (!req.isAuthenticated() || (req.user as any).role !== 'admin') return res.status(401).json({ message: "Unauthorized" });
-    
-    const allUsers = await storage.getAllUsers();
-    // Filter out admin account itself and return with proper structure
-    const users = allUsers.map(user => ({
-      id: user.id,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
-      isApproved: user.isApproved
-    }));
-    
-    res.json(users);
-  });
-
   // Get Students by Batch Year
   app.get(api.admin.getStudentsByBatch.path, async (req, res) => {
     if (!req.isAuthenticated() || (req.user as any).role !== 'admin') return res.status(401).json({ message: "Unauthorized" });
     
     const year = parseInt(Array.isArray(req.params.year) ? req.params.year[0] : req.params.year);
     
-    // Get all users who are students
-    const allUsers = await storage.getAllUsers();
-    const registeredStudents = allUsers
-      .filter(user => user.role === 'student' && user.joinedYear === year)
-      .map(user => ({
-        id: user.id,
-        fullName: user.fullName,
-        rollNumber: user.rollNumber || 'N/A',
-        email: user.email,
-        branch: user.branch || 'N/A',
-        joiningYear: user.joinedYear,
-        certificateIssued: false,
-        certificateCount: 0
-      }));
-    
-    // Get all certificates and group by student for the batch year
+    // Get all certificates and group by student
     const allCertificates = await storage.getAllCertificates();
-    const certsByStudent = allCertificates
+    
+    // Filter certificates by joining year and get unique students with certificates
+    const studentsWithCerts = allCertificates
       .filter(cert => cert.joiningYear === year.toString())
       .reduce((acc: any[], cert) => {
+        // Check if student already exists in the list
         const existingStudent = acc.find(s => s.rollNumber === cert.rollNumber);
         if (!existingStudent) {
           acc.push({
@@ -638,31 +609,17 @@ export async function registerRoutes(
             email: cert.email || '',
             branch: cert.branch,
             joiningYear: cert.joiningYear,
-            certificateIssued: true,
+            passingYear: cert.passingYear,
             certificateCount: 1
           });
         } else {
           existingStudent.certificateCount++;
         }
         return acc;
-      }, []);
-    
-    // Merge registered students with certificate data
-    const studentsMap = new Map(registeredStudents.map(s => [s.rollNumber, s]));
-    certsByStudent.forEach(cert => {
-      if (studentsMap.has(cert.rollNumber)) {
-        const student = studentsMap.get(cert.rollNumber);
-        student.certificateIssued = true;
-        student.certificateCount = cert.certificateCount;
-      } else {
-        studentsMap.set(cert.rollNumber, cert);
-      }
-    });
-    
-    const allBatchStudents = Array.from(studentsMap.values())
+      }, [])
       .sort((a, b) => a.fullName.localeCompare(b.fullName));
     
-    res.json(allBatchStudents);
+    res.json(studentsWithCerts);
   });
 
   // Get All Certificates (Admin)

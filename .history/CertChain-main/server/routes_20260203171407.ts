@@ -586,49 +586,20 @@ export async function registerRoutes(
     res.json({ ...user, message: "User account has been restored" });
   });
 
-  // Get All Users
-  app.get(api.admin.getAllUsers.path, async (req, res) => {
-    if (!req.isAuthenticated() || (req.user as any).role !== 'admin') return res.status(401).json({ message: "Unauthorized" });
-    
-    const allUsers = await storage.getAllUsers();
-    // Filter out admin account itself and return with proper structure
-    const users = allUsers.map(user => ({
-      id: user.id,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
-      isApproved: user.isApproved
-    }));
-    
-    res.json(users);
-  });
-
   // Get Students by Batch Year
   app.get(api.admin.getStudentsByBatch.path, async (req, res) => {
     if (!req.isAuthenticated() || (req.user as any).role !== 'admin') return res.status(401).json({ message: "Unauthorized" });
     
     const year = parseInt(Array.isArray(req.params.year) ? req.params.year[0] : req.params.year);
     
-    // Get all users who are students
-    const allUsers = await storage.getAllUsers();
-    const registeredStudents = allUsers
-      .filter(user => user.role === 'student' && user.joinedYear === year)
-      .map(user => ({
-        id: user.id,
-        fullName: user.fullName,
-        rollNumber: user.rollNumber || 'N/A',
-        email: user.email,
-        branch: user.branch || 'N/A',
-        joiningYear: user.joinedYear,
-        certificateIssued: false,
-        certificateCount: 0
-      }));
-    
-    // Get all certificates and group by student for the batch year
+    // Get all certificates and group by student
     const allCertificates = await storage.getAllCertificates();
-    const certsByStudent = allCertificates
+    
+    // Filter certificates by joining year and get unique students with certificates
+    const studentsWithCerts = allCertificates
       .filter(cert => cert.joiningYear === year.toString())
       .reduce((acc: any[], cert) => {
+        // Check if student already exists in the list
         const existingStudent = acc.find(s => s.rollNumber === cert.rollNumber);
         if (!existingStudent) {
           acc.push({
@@ -638,31 +609,17 @@ export async function registerRoutes(
             email: cert.email || '',
             branch: cert.branch,
             joiningYear: cert.joiningYear,
-            certificateIssued: true,
+            passingYear: cert.passingYear,
             certificateCount: 1
           });
         } else {
           existingStudent.certificateCount++;
         }
         return acc;
-      }, []);
-    
-    // Merge registered students with certificate data
-    const studentsMap = new Map(registeredStudents.map(s => [s.rollNumber, s]));
-    certsByStudent.forEach(cert => {
-      if (studentsMap.has(cert.rollNumber)) {
-        const student = studentsMap.get(cert.rollNumber);
-        student.certificateIssued = true;
-        student.certificateCount = cert.certificateCount;
-      } else {
-        studentsMap.set(cert.rollNumber, cert);
-      }
-    });
-    
-    const allBatchStudents = Array.from(studentsMap.values())
+      }, [])
       .sort((a, b) => a.fullName.localeCompare(b.fullName));
     
-    res.json(allBatchStudents);
+    res.json(studentsWithCerts);
   });
 
   // Get All Certificates (Admin)
@@ -748,9 +705,6 @@ export async function registerRoutes(
     const recentActivity = await (storage as any).getRecentActivity(10);
     const recentPayments = await (storage as any).getRecentPayments(10);
     const accessLogs = await (storage as any).getAccessLogs(10);
-    const totalPaymentsAmount = (storage as any).getTotalPaymentsAmount
-      ? await (storage as any).getTotalPaymentsAmount()
-      : (recentPayments || []).reduce((sum: number, payment: any) => sum + (payment?.amount || 0), 0);
     
     res.json({
       totalUsers,
@@ -761,8 +715,7 @@ export async function registerRoutes(
       verificationRate,
       recentActivity: recentActivity || [],
       recentPayments: recentPayments || [],
-      accessLogs: accessLogs || [],
-      totalPaymentsAmount
+      accessLogs: accessLogs || []
     });
   });
 
@@ -787,23 +740,6 @@ export async function registerRoutes(
     const uniqueCerts = Array.from(
       new Map(allCerts.map((cert: any) => [cert.id, cert])).values()
     );
-
-    if (uniqueCerts.length > 0) {
-      for (const cert of uniqueCerts) {
-        await (storage as any).logAccess(
-          student.id,
-          student.fullName,
-          student.email,
-          'student',
-          cert.id,
-          student.id,
-          student.fullName,
-          student.email,
-          'student_viewed',
-          (req.ip || req.connection.remoteAddress) as string
-        );
-      }
-    }
     
     console.log(`📜 Student ${student.email} retrieved ${uniqueCerts.length} certificate(s) (${certsByStudentId.length} by ID, ${certsByRollNumber.length} by roll number)`);
     
@@ -840,7 +776,6 @@ export async function registerRoutes(
         verifier.id,
         verifier.fullName,
         verifier.email,
-        verifier.role || 'verifier',
         cert.id,
         student.id,
         student.fullName,
@@ -874,7 +809,7 @@ export async function registerRoutes(
         student.id,
         student.fullName,
         student.rollNumber || 'N/A',
-        1000 // Standard payment amount
+        10 // Standard payment amount
       );
     }
     

@@ -586,23 +586,6 @@ export async function registerRoutes(
     res.json({ ...user, message: "User account has been restored" });
   });
 
-  // Get All Users
-  app.get(api.admin.getAllUsers.path, async (req, res) => {
-    if (!req.isAuthenticated() || (req.user as any).role !== 'admin') return res.status(401).json({ message: "Unauthorized" });
-    
-    const allUsers = await storage.getAllUsers();
-    // Filter out admin account itself and return with proper structure
-    const users = allUsers.map(user => ({
-      id: user.id,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
-      isApproved: user.isApproved
-    }));
-    
-    res.json(users);
-  });
-
   // Get Students by Batch Year
   app.get(api.admin.getStudentsByBatch.path, async (req, res) => {
     if (!req.isAuthenticated() || (req.user as any).role !== 'admin') return res.status(401).json({ message: "Unauthorized" });

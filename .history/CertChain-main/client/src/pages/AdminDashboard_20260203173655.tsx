@@ -23,8 +23,6 @@ export default function AdminDashboard() {
   const [selectedBatch, setSelectedBatch] = React.useState<number | null>(null);
   const [batchStudents, setBatchStudents] = React.useState<any[]>([]);
   const [batchLoading, setBatchLoading] = React.useState(false);
-  const [blockingUserId, setBlockingUserId] = React.useState<string | null>(null);
-  const [unblockingUserId, setUnblockingUserId] = React.useState<string | null>(null);
 
   // Fetch all issued certificates
   const { data: allCertificates, isLoading: certificatesLoading } = useQuery({
@@ -46,16 +44,6 @@ export default function AdminDashboard() {
     },
   });
 
-  // Fetch all users
-  const { data: allUsers, isLoading: usersLoading, refetch: refetchUsers } = useQuery({
-    queryKey: [api.admin.getAllUsers.path],
-    queryFn: async () => {
-      const res = await fetch(api.admin.getAllUsers.path);
-      if (!res.ok) throw new Error("Failed to fetch users");
-      return res.json();
-    },
-  });
-
   // Fetch students by batch year
   const fetchStudentsByBatch = async (year: number) => {
     try {
@@ -70,34 +58,6 @@ export default function AdminDashboard() {
       setBatchStudents([]);
     } finally {
       setBatchLoading(false);
-    }
-  };
-
-  // Handle block user
-  const handleBlockUser = async (userId: string) => {
-    try {
-      setBlockingUserId(userId);
-      const res = await fetch(`/api/admin/users/${userId}/block`, { method: 'POST' });
-      if (!res.ok) throw new Error('Failed to block user');
-      refetchUsers();
-    } catch (err) {
-      console.error('Block error:', err);
-    } finally {
-      setBlockingUserId(null);
-    }
-  };
-
-  // Handle unblock user
-  const handleUnblockUser = async (userId: string) => {
-    try {
-      setUnblockingUserId(userId);
-      const res = await fetch(`/api/admin/users/${userId}/unblock`, { method: 'POST' });
-      if (!res.ok) throw new Error('Failed to unblock user');
-      refetchUsers();
-    } catch (err) {
-      console.error('Unblock error:', err);
-    } finally {
-      setUnblockingUserId(null);
     }
   };
 
@@ -506,10 +466,9 @@ export default function AdminDashboard() {
                       </div>
                       <div className="grid md:grid-cols-2 gap-4 text-sm pl-13 pt-3 border-t border-blue-500/10">
                         <div>
-                          <p className="text-muted-foreground text-xs mb-1">Actor</p>
+                          <p className="text-muted-foreground text-xs mb-1">Verifier</p>
                           <p className="font-medium text-foreground">{log.verifier.fullName}</p>
                           <p className="text-xs text-muted-foreground">{log.verifier.email}</p>
-                          <p className="text-xs text-muted-foreground capitalize">Role: {log.verifier.role || 'verifier'}</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground text-xs mb-1">Student</p>
@@ -728,19 +687,14 @@ export default function AdminDashboard() {
               ) : batchStudents.length === 0 ? (
                 <div className="text-center py-16 px-8 bg-gradient-to-br from-muted/30 to-background border border-border/50 rounded-2xl">
                   <BookOpen className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                  <p className="text-muted-foreground text-lg">No students registered for batch {selectedBatch}</p>
+                  <p className="text-muted-foreground text-lg">No students found for batch {selectedBatch}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-6">
-                    <div className="flex justify-between items-center">
-                      <p className="text-sm font-semibold text-foreground">
-                        Total: {batchStudents.length} student{batchStudents.length !== 1 ? 's' : ''} registered in batch {selectedBatch}
-                      </p>
-                      <p className="text-sm font-semibold text-emerald-600">
-                        Certificates issued: {batchStudents.filter((s: any) => s.certificateIssued).length}
-                      </p>
-                    </div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {batchStudents.length} student{batchStudents.length !== 1 ? 's' : ''} with certificates issued for batch {selectedBatch}
+                    </p>
                   </div>
                   <div className="grid md:grid-cols-2 gap-6">
                     {batchStudents.map((student: any, idx: number) => (
@@ -758,15 +712,11 @@ export default function AdminDashboard() {
                             </div>
                             <div className="flex flex-col gap-2 items-end">
                               <span className="px-3 py-1 bg-violet-500/20 text-violet-700 text-xs rounded-full font-semibold">
-                                {student.joiningYear}
+                                {student.joiningYear}-{student.passingYear}
                               </span>
-                              {student.certificateIssued ? (
+                              {student.certificateCount && student.certificateCount > 1 && (
                                 <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-700 text-xs rounded-full font-semibold">
-                                  Certificate
-                                </span>
-                              ) : (
-                                <span className="px-2 py-0.5 bg-gray-500/20 text-gray-700 text-xs rounded-full font-semibold">
-                                  Pending
+                                  {student.certificateCount} certs
                                 </span>
                               )}
                             </div>
@@ -884,99 +834,65 @@ export default function AdminDashboard() {
 
           {/* Account Management Tab */}
           <TabsContent value="accounts" className="mt-8">
-            {usersLoading ? (
-              <div className="flex justify-center items-center py-20">
-                <div className="text-center">
-                  <Loader2 className="animate-spin w-10 h-10 text-primary mx-auto mb-4" />
-                  <p className="text-muted-foreground">Loading accounts...</p>
+            <Card className="p-8 bg-gradient-to-br from-card via-card to-card/50 border-primary/20 shadow-lg backdrop-blur-sm">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                  <Shield className="w-6 h-6 text-orange-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground">Account Management</h2>
+                  <p className="text-sm text-muted-foreground">Block/Unblock student and verifier accounts</p>
                 </div>
               </div>
-            ) : (
-              <div className="space-y-8">
-                {['student', 'verifier', 'admin'].map((role) => {
-                  const roleUsers = allUsers?.filter((u: any) => u.role === role) || [];
-                  const blockedUsers = roleUsers.filter((u: any) => !u.isApproved);
-                  const activeUsers = roleUsers.filter((u: any) => u.isApproved);
+
+              <div className="grid md:grid-cols-2 gap-8">
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Lock className="w-5 h-5 text-red-600" />
+                    <h3 className="text-lg font-bold text-foreground">Block Account</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-6">Prevent users from accessing the platform</p>
                   
-                  return (
-                    <div key={role}>
-                      <Card className="p-6 bg-gradient-to-br from-card via-card to-card/50 border-primary/20 shadow-lg backdrop-blur-sm">
-                        <div className="flex items-center gap-3 mb-6">
-                          <div className={`p-3 rounded-lg border ${role === 'student' ? 'bg-blue-500/10 border-blue-500/20' : role === 'verifier' ? 'bg-purple-500/10 border-purple-500/20' : 'bg-orange-500/10 border-orange-500/20'}`}>
-                            <Users className={`w-6 h-6 ${role === 'student' ? 'text-blue-600' : role === 'verifier' ? 'text-purple-600' : 'text-orange-600'}`} />
-                          </div>
+                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                    {analytics?.recentActivity?.slice(0, 5).map((user: any) => (
+                      <motion.div
+                        key={user.id}
+                        className="p-4 bg-muted/50 rounded-lg border border-border/50 hover:border-red-500/30 transition-all group"
+                      >
+                        <div className="flex justify-between items-start">
                           <div>
-                            <h3 className="text-xl font-bold text-foreground capitalize">{role} Accounts</h3>
-                            <p className="text-sm text-muted-foreground">{roleUsers.length} total • {activeUsers.length} active • {blockedUsers.length} blocked</p>
+                            <p className="font-semibold text-foreground">{user.user?.fullName || 'User'}</p>
+                            <p className="text-xs text-muted-foreground">{user.user?.email || 'N/A'}</p>
                           </div>
+                          <Button
+                            size="sm"
+                            className="bg-red-600/80 hover:bg-red-700 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => console.log('Block user:', user.user?.id)}
+                          >
+                            <Lock className="w-3 h-3 mr-1" />
+                            Block
+                          </Button>
                         </div>
-                        
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {roleUsers.length === 0 ? (
-                            <div className="col-span-full text-center py-8 text-muted-foreground">
-                              No {role} accounts found
-                            </div>
-                          ) : (
-                            roleUsers.map((user: any) => (
-                              <motion.div
-                                key={user.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.2 }}
-                              >
-                                <Card className={`p-4 border transition-all ${user.isApproved ? 'bg-muted/30 border-green-500/30 hover:border-green-500/60' : 'bg-red-500/5 border-red-500/30 hover:border-red-500/60'}`}>
-                                  <div className="space-y-3">
-                                    <div>
-                                      <p className="font-semibold text-foreground truncate">{user.fullName}</p>
-                                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                                    </div>
-                                    <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${user.isApproved ? 'bg-green-500/20 text-green-700' : 'bg-red-500/20 text-red-700'}`}>
-                                        {user.isApproved ? 'Active' : 'Blocked'}
-                                      </span>
-                                      {user.isApproved ? (
-                                        <Button
-                                          size="sm"
-                                          variant="destructive"
-                                          className="h-7 text-xs"
-                                          disabled={blockingUserId === user.id}
-                                          onClick={() => handleBlockUser(user.id)}
-                                        >
-                                          {blockingUserId === user.id ? (
-                                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                                          ) : (
-                                            <Lock className="w-3 h-3 mr-1" />
-                                          )}
-                                          Block
-                                        </Button>
-                                      ) : (
-                                        <Button
-                                          size="sm"
-                                          className="h-7 text-xs bg-green-600 hover:bg-green-700"
-                                          disabled={unblockingUserId === user.id}
-                                          onClick={() => handleUnblockUser(user.id)}
-                                        >
-                                          {unblockingUserId === user.id ? (
-                                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                                          ) : (
-                                            <Unlock className="w-3 h-3 mr-1" />
-                                          )}
-                                          Unblock
-                                        </Button>
-                                      )}
-                                    </div>
-                                  </div>
-                                </Card>
-                              </motion.div>
-                            ))
-                          )}
-                        </div>
-                      </Card>
-                    </div>
-                  );
-                })}
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Unlock className="w-5 h-5 text-green-600" />
+                    <h3 className="text-lg font-bold text-foreground">Unblock Account</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-6">Restore access to blocked user accounts</p>
+
+                  <div className="p-8 bg-gradient-to-br from-green-500/10 to-emerald-500/5 rounded-lg border border-green-500/20 text-center">
+                    <Unlock className="w-12 h-12 mx-auto mb-3 text-green-600 opacity-50" />
+                    <p className="text-sm text-muted-foreground">No blocked accounts currently</p>
+                    <p className="text-xs text-muted-foreground mt-2">Blocked users will appear here</p>
+                  </div>
+                </div>
               </div>
-            )}
+            </Card>
           </TabsContent>
         </Tabs>
         </motion.div>
@@ -1006,7 +922,7 @@ export default function AdminDashboard() {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="hover:text-primary transition cursor-pointer">Dashboard</li>
                 <li className="hover:text-primary transition cursor-pointer">Analytics</li>
-                <li className="hover:text-primary transition cursor-pointer">Settings</li>
+                <li className="hover:text-primary transition cursor-pointer">⚙️ Settings</li>
               </ul>
             </motion.div>
             <motion.div
@@ -1017,8 +933,8 @@ export default function AdminDashboard() {
               <h4 className="font-semibold text-foreground mb-4">Tools</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="hover:text-primary transition cursor-pointer">Approve Users</li>
-                <li className="hover:text-primary transition cursor-pointer">Issue Certificates</li>
-                <li className="hover:text-primary transition cursor-pointer">View Reports</li>
+                <li className="hover:text-primary transition cursor-pointer">📜 Issue Certificates</li>
+                <li className="hover:text-primary transition cursor-pointer">📋 View Reports</li>
               </ul>
             </motion.div>
             <motion.div
@@ -1028,14 +944,14 @@ export default function AdminDashboard() {
             >
               <h4 className="font-semibold text-foreground mb-4">Support</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="hover:text-primary transition cursor-pointer">Documentation</li>
-                <li className="hover:text-primary transition cursor-pointer">Support</li>
-                <li className="hover:text-primary transition cursor-pointer">System Status</li>
+                <li className="hover:text-primary transition cursor-pointer">📚 Documentation</li>
+                <li className="hover:text-primary transition cursor-pointer">💬 Support</li>
+                <li className="hover:text-primary transition cursor-pointer">🟢System Status</li>
               </ul>
             </motion.div>
           </div>
           <div className="border-t border-primary/10 pt-8 text-center">
-            <p className="text-muted-foreground text-sm">© 2026 AI-Based Credential Verification System.| All rights reserved</p>
+            <p className="text-muted-foreground text-sm">© 2026 AI-Based Credential Verification System. Built with ❤️ | All rights reserved</p>
           </div>
         </div>
       </footer>
