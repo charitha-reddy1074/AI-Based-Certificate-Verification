@@ -744,6 +744,23 @@ export async function registerRoutes(
     const uniqueCerts = Array.from(
       new Map(allCerts.map((cert: any) => [cert.id, cert])).values()
     );
+
+    if (uniqueCerts.length > 0) {
+      for (const cert of uniqueCerts) {
+        await (storage as any).logAccess(
+          student.id,
+          student.fullName,
+          student.email,
+          'student',
+          cert.id,
+          student.id,
+          student.fullName,
+          student.email,
+          'student_viewed',
+          (req.ip || req.connection.remoteAddress) as string
+        );
+      }
+    }
     
     console.log(`📜 Student ${student.email} retrieved ${uniqueCerts.length} certificate(s) (${certsByStudentId.length} by ID, ${certsByRollNumber.length} by roll number)`);
     
@@ -780,6 +797,7 @@ export async function registerRoutes(
         verifier.id,
         verifier.fullName,
         verifier.email,
+        verifier.role || 'verifier',
         cert.id,
         student.id,
         student.fullName,

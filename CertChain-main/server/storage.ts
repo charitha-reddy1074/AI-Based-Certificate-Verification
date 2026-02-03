@@ -81,6 +81,7 @@ const accessLogSchema = new mongoose.Schema({
   verifierId: mongoose.Schema.Types.Mixed,
   verifierName: String,
   verifierEmail: String,
+  actorRole: String,
   certificateId: mongoose.Schema.Types.Mixed,
   studentId: mongoose.Schema.Types.Mixed,
   studentName: String,
@@ -602,12 +603,13 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async logAccess(verifierId: any, verifierName: string, verifierEmail: string, certificateId: any, studentId: any, studentName: string, studentEmail: string, action: string = 'viewed', ipAddress?: string) {
+  async logAccess(verifierId: any, verifierName: string, verifierEmail: string, actorRole: string, certificateId: any, studentId: any, studentName: string, studentEmail: string, action: string = 'viewed', ipAddress?: string) {
     try {
       await AccessLogModel.create({
         verifierId,
         verifierName,
         verifierEmail,
+        actorRole,
         certificateId,
         studentId,
         studentName,
@@ -692,6 +694,7 @@ export class DatabaseStorage implements IStorage {
           id: log.verifierId,
           fullName: log.verifierName,
           email: log.verifierEmail,
+          role: log.actorRole || 'verifier',
         },
         certificateId: log.certificateId,
         studentInfo: {

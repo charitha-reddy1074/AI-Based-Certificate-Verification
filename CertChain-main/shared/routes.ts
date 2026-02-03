@@ -74,7 +74,7 @@ export const api = {
           totalPaymentsAmount: z.number(),
           accessLogs: z.array(z.object({
             id: z.string(),
-            verifier: z.object({ id: z.any(), fullName: z.string(), email: z.string() }),
+            verifier: z.object({ id: z.any(), fullName: z.string(), email: z.string(), role: z.string() }),
             certificateId: z.any(),
             studentInfo: z.object({ id: z.any(), fullName: z.string(), email: z.string() }),
             accessTime: z.string(),

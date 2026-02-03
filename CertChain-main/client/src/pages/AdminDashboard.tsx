@@ -466,9 +466,10 @@ export default function AdminDashboard() {
                       </div>
                       <div className="grid md:grid-cols-2 gap-4 text-sm pl-13 pt-3 border-t border-blue-500/10">
                         <div>
-                          <p className="text-muted-foreground text-xs mb-1">Verifier</p>
+                          <p className="text-muted-foreground text-xs mb-1">Actor</p>
                           <p className="font-medium text-foreground">{log.verifier.fullName}</p>
                           <p className="text-xs text-muted-foreground">{log.verifier.email}</p>
+                          <p className="text-xs text-muted-foreground capitalize">Role: {log.verifier.role || 'verifier'}</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground text-xs mb-1">Student</p>
@@ -922,7 +923,7 @@ export default function AdminDashboard() {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="hover:text-primary transition cursor-pointer">Dashboard</li>
                 <li className="hover:text-primary transition cursor-pointer">Analytics</li>
-                <li className="hover:text-primary transition cursor-pointer">⚙️ Settings</li>
+                <li className="hover:text-primary transition cursor-pointer">Settings</li>
               </ul>
             </motion.div>
             <motion.div
@@ -933,8 +934,8 @@ export default function AdminDashboard() {
               <h4 className="font-semibold text-foreground mb-4">Tools</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="hover:text-primary transition cursor-pointer">Approve Users</li>
-                <li className="hover:text-primary transition cursor-pointer">📜 Issue Certificates</li>
-                <li className="hover:text-primary transition cursor-pointer">📋 View Reports</li>
+                <li className="hover:text-primary transition cursor-pointer">Issue Certificates</li>
+                <li className="hover:text-primary transition cursor-pointer">View Reports</li>
               </ul>
             </motion.div>
             <motion.div
@@ -944,14 +945,14 @@ export default function AdminDashboard() {
             >
               <h4 className="font-semibold text-foreground mb-4">Support</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="hover:text-primary transition cursor-pointer">📚 Documentation</li>
-                <li className="hover:text-primary transition cursor-pointer">💬 Support</li>
-                <li className="hover:text-primary transition cursor-pointer">🟢 System Status</li>
+                <li className="hover:text-primary transition cursor-pointer">Documentation</li>
+                <li className="hover:text-primary transition cursor-pointer">Support</li>
+                <li className="hover:text-primary transition cursor-pointer">System Status</li>
               </ul>
             </motion.div>
           </div>
           <div className="border-t border-primary/10 pt-8 text-center">
-            <p className="text-muted-foreground text-sm">© 2026 AI-Based Credential Verification System. Built with ❤️ | All rights reserved</p>
+            <p className="text-muted-foreground text-sm">© 2026 AI-Based Credential Verification System.| All rights reserved</p>
           </div>
         </div>
       </footer>
