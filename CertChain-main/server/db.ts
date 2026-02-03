@@ -13,7 +13,7 @@ if (dbUrl) {
 
 export async function initDb() {
   try {
-    await mongoose.connect(dbUrl || 'mongodb://localhost:27017/CertChain_db', {
+    await mongoose.connect(dbUrl || 'mongodb+srv://charithareddy1074_db_user:12345678ch@cluster0.hgi5pa6.mongodb.net/', {
       serverSelectionTimeoutMS: 30000,
       connectTimeoutMS: 30000,
       socketTimeoutMS: 45000,
