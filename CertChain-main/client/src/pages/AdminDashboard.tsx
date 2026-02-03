@@ -375,6 +375,10 @@ export default function AdminDashboard() {
                   <p className="text-sm text-muted-foreground">Revenue and transaction tracking</p>
                 </div>
               </div>
+              <div className="mb-6 p-4 rounded-lg border border-green-500/20 bg-green-500/10 flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">Total amount collected</p>
+                <p className="text-xl font-bold text-green-700">₹{analytics?.totalPaymentsAmount ?? 0}</p>
+              </div>
               {!analytics?.recentPayments || analytics.recentPayments.length === 0 ? (
                 <div className="text-center py-16 text-muted-foreground">
                   <CreditCard className="w-16 h-16 mx-auto mb-4 opacity-30" />

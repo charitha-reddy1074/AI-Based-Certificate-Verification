@@ -44,7 +44,7 @@ export const verifierUnlocks = pgTable("verifier_unlocks", {
   id: serial("id").primaryKey(),
   verifierId: integer("verifier_id").notNull(),
   certificateId: integer("certificate_id").notNull(),
-  paidAmount: integer("paid_amount").default(10),
+  paidAmount: integer("paid_amount").default(1000),
   unlockedAt: timestamp("unlocked_at").defaultNow(),
 });
 

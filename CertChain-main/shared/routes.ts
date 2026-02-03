@@ -71,6 +71,7 @@ export const api = {
             timestamp: z.string(),
             certificateDetails: z.object({ studentName: z.string(), rollNumber: z.string() }).optional()
           })),
+          totalPaymentsAmount: z.number(),
           accessLogs: z.array(z.object({
             id: z.string(),
             verifier: z.object({ id: z.any(), fullName: z.string(), email: z.string() }),

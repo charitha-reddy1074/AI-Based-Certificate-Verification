@@ -49,7 +49,7 @@ const certificateSchema = new mongoose.Schema({
 const unlockSchema = new mongoose.Schema({
   verifierId: { type: String, required: true },
   certificateId: { type: String, required: true },
-  paidAmount: { type: Number, default: 10 },
+  paidAmount: { type: Number, default: 1000 },
   unlockedAt: { type: Date, default: Date.now },
 });
 
@@ -123,9 +123,23 @@ export class MemoryStorage implements IStorage {
   private users: Map<number, User> = new Map();
   private certificates: Map<number, Certificate> = new Map();
   private unlocks: Map<number, VerifierUnlock> = new Map();
+  private paymentLogs: Array<{
+    id: number;
+    verifierId: any;
+    verifierName: string;
+    verifierEmail: string;
+    certificateId: any;
+    certificateName: string;
+    studentId: any;
+    studentName: string;
+    studentRollNumber: string;
+    amount: number;
+    timestamp: Date;
+  }> = [];
   private userIdCounter = 1;
   private certIdCounter = 1;
   private unlockIdCounter = 1;
+  private paymentIdCounter = 1;
 
   async getUser(id: number): Promise<User | undefined> {
     return this.users.get(id);
@@ -231,11 +245,66 @@ export class MemoryStorage implements IStorage {
       id: this.unlockIdCounter++,
       verifierId,
       certificateId,
-      paidAmount: 10,
+      paidAmount: 1000,
       unlockedAt: new Date(),
     };
     this.unlocks.set(unlock.id, unlock);
     return unlock;
+  }
+
+  async logPayment(
+    verifierId: any,
+    verifierName: string,
+    verifierEmail: string,
+    certificateId: any,
+    certificateName: string,
+    studentId: any,
+    studentName: string,
+    studentRollNumber: string,
+    amount: number
+  ) {
+    this.paymentLogs.push({
+      id: this.paymentIdCounter++,
+      verifierId,
+      verifierName,
+      verifierEmail,
+      certificateId,
+      certificateName,
+      studentId,
+      studentName,
+      studentRollNumber,
+      amount,
+      timestamp: new Date(),
+    });
+  }
+
+  async getRecentPayments(limit: number = 10) {
+    return this.paymentLogs
+      .slice(-limit)
+      .reverse()
+      .map(payment => ({
+        id: String(payment.id),
+        verifier: {
+          id: payment.verifierId,
+          fullName: payment.verifierName,
+          email: payment.verifierEmail,
+        },
+        certificate: {
+          id: payment.certificateId,
+          name: payment.certificateName,
+          studentId: payment.studentId,
+        },
+        amount: payment.amount,
+        timestamp: payment.timestamp.toISOString(),
+        certificateDetails: {
+          studentName: payment.studentName,
+          rollNumber: payment.studentRollNumber,
+        },
+      }));
+  }
+
+  async getTotalPaymentsAmount() {
+    return this.paymentLogs.reduce((sum, payment) => sum + (payment.amount || 0), 0);
   }
 
   async getUnlockedCertificates(verifierId: number): Promise<Certificate[]> {
@@ -412,7 +481,7 @@ export class DatabaseStorage implements IStorage {
       const mongoUnlock = await UnlockModel.create({
         verifierId,
         certificateId,
-        paidAmount: 10,
+        paidAmount: 1000,
       });
       return this.mongoToUnlock(mongoUnlock);
     } catch (err) {
@@ -599,6 +668,18 @@ export class DatabaseStorage implements IStorage {
     } catch (err) {
       console.error('Error getting recent payments:', err);
       return [];
+    }
+  }
+
+  async getTotalPaymentsAmount() {
+    try {
+      const result = await PaymentLogModel.aggregate([
+        { $group: { _id: null, total: { $sum: "$amount" } } }
+      ]);
+      return result?.[0]?.total || 0;
+    } catch (err) {
+      console.error('Error getting total payments amount:', err);
+      return 0;
     }
   }
 

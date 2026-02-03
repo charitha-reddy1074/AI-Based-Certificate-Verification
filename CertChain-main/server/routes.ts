@@ -705,6 +705,9 @@ export async function registerRoutes(
     const recentActivity = await (storage as any).getRecentActivity(10);
     const recentPayments = await (storage as any).getRecentPayments(10);
     const accessLogs = await (storage as any).getAccessLogs(10);
+    const totalPaymentsAmount = (storage as any).getTotalPaymentsAmount
+      ? await (storage as any).getTotalPaymentsAmount()
+      : (recentPayments || []).reduce((sum: number, payment: any) => sum + (payment?.amount || 0), 0);
     
     res.json({
       totalUsers,
@@ -715,7 +718,8 @@ export async function registerRoutes(
       verificationRate,
       recentActivity: recentActivity || [],
       recentPayments: recentPayments || [],
-      accessLogs: accessLogs || []
+      accessLogs: accessLogs || [],
+      totalPaymentsAmount
     });
   });
 
@@ -809,7 +813,7 @@ export async function registerRoutes(
         student.id,
         student.fullName,
         student.rollNumber || 'N/A',
-        10 // Standard payment amount
+        1000 // Standard payment amount
       );
     }
     
