@@ -390,7 +390,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCertificate(id: number): Promise<Certificate | undefined> {
-    return this.getCertificateById(id);
+    return this.getCertificateById(String(id));
   }
 
   async getAllCertificates(): Promise<Certificate[]> {

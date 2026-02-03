@@ -672,15 +672,15 @@ export async function registerRoutes(
 
   // Public Routes - Certificate Verification via QR Code
   app.get(api.public.getCertificate.path, async (req, res) => {
-    const certId = parseInt(req.params.id as string);
-    const cert = await storage.getCertificate(certId);
+    const certId = req.params.id as string;
+    const cert = await storage.getCertificate(certId as any);
     if (!cert) return res.status(404).json({ message: "Certificate not found" });
     res.json(cert);
   });
 
   app.get(api.public.verifyCertificate.path, async (req, res) => {
     const certId = req.params.certificateId as string;
-    const cert = await storage.getCertificate(parseInt(certId));
+    const cert = await storage.getCertificate(certId as any);
     if (!cert) return res.status(404).json({ message: "Certificate not found" });
     res.json(cert);
   });
