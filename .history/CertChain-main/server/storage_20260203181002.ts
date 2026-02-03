@@ -362,17 +362,6 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getUserById(id: any): Promise<User | undefined> {
-    try {
-      const mongoUser = await UserModel.findById(id);
-      if (!mongoUser) return undefined;
-      return this.mongoToUser(mongoUser);
-    } catch (err) {
-      console.error('Error getUserById:', err);
-      return undefined;
-    }
-  }
-
   async createUser(insertUser: InsertUser): Promise<User> {
     try {
       const mongoUser = await UserModel.create(insertUser);

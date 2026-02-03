@@ -538,8 +538,8 @@ export async function registerRoutes(
   app.post(api.admin.blockUser.path, async (req, res) => {
     if (!req.isAuthenticated() || (req.user as any).role !== 'admin') return res.status(401).json({ message: "Unauthorized" });
     
-    const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const user = await (storage as any).getUserById(userId);
+    const userId = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+    const user = await storage.getUser(userId);
     
     if (!user) return res.status(404).json({ message: "User not found" });
     
@@ -564,8 +564,8 @@ export async function registerRoutes(
   app.post(api.admin.unblockUser.path, async (req, res) => {
     if (!req.isAuthenticated() || (req.user as any).role !== 'admin') return res.status(401).json({ message: "Unauthorized" });
     
-    const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const user = await (storage as any).getUserById(userId);
+    const userId = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+    const user = await storage.getUser(userId);
     
     if (!user) return res.status(404).json({ message: "User not found" });
     
@@ -609,60 +609,68 @@ export async function registerRoutes(
     
     const year = parseInt(Array.isArray(req.params.year) ? req.params.year[0] : req.params.year);
     
-    // Get all users who are students
-    const allUsers = await storage.getAllUsers();
-    const registeredStudents = allUsers
-      .filter(user => user.role === 'student' && user.joinedYear === year)
-      .map(user => ({
-        id: user.id,
-        fullName: user.fullName,
-        rollNumber: user.rollNumber || 'N/A',
-        email: user.email,
-        branch: user.branch || 'N/A',
-        joiningYear: user.joinedYear,
-        certificateIssued: false,
-        certificateCount: 0
-      }));
-    
-    // Get all certificates and group by student for the batch year
-    const allCertificates = await storage.getAllCertificates();
-    const certsByStudent = allCertificates
-      .filter(cert => cert.joiningYear === year.toString())
-      .reduce((acc: any[], cert) => {
-        const existingStudent = acc.find(s => s.rollNumber === cert.rollNumber);
-        if (!existingStudent) {
-          acc.push({
-            id: cert.studentId || cert.id,
-            fullName: cert.name,
-            rollNumber: cert.rollNumber,
-            email: cert.email || '',
-            branch: cert.branch,
-            joiningYear: cert.joiningYear,
-            certificateIssued: true,
-            certificateCount: 1
-          });
+    try {
+      // Get all users who are students
+      const allUsers = await storage.getAllUsers();
+      const registeredStudents = allUsers
+        .filter(user => user.role === 'student' && user.joinedYear === year)
+        .map(user => ({
+          id: user.id,
+          fullName: user.fullName,
+          rollNumber: user.rollNumber || 'N/A',
+          email: user.email,
+          branch: user.branch || 'N/A',
+          joiningYear: user.joinedYear,
+          certificateIssued: false,
+          certificateCount: 0
+        }));
+      
+      // Get all certificates and group by student for the batch year
+      const allCertificates = await storage.getAllCertificates();
+      const certsByStudent = allCertificates
+        .filter(cert => {
+          const certYear = typeof cert.joiningYear === 'string' ? parseInt(cert.joiningYear) : cert.joiningYear;
+          return certYear === year;
+        })
+        .reduce((acc: any[], cert) => {
+          const existingStudent = acc.find(s => s.rollNumber === cert.rollNumber);
+          if (!existingStudent) {
+            acc.push({
+              id: cert.studentId || cert.id,
+              fullName: cert.name,
+              rollNumber: cert.rollNumber,
+              email: cert.email || '',
+              branch: cert.branch,
+              joiningYear: cert.joiningYear,
+              certificateIssued: true,
+              certificateCount: 1
+            });
+          } else {
+            existingStudent.certificateCount++;
+          }
+          return acc;
+        }, []);
+      
+      // Merge registered students with certificate data
+      const studentsMap = new Map(registeredStudents.map(s => [s.rollNumber, s]));
+      certsByStudent.forEach(cert => {
+        if (studentsMap.has(cert.rollNumber)) {
+          const student = studentsMap.get(cert.rollNumber);
+          student.certificateIssued = true;
+          student.certificateCount = cert.certificateCount;
         } else {
-          existingStudent.certificateCount++;
+          studentsMap.set(cert.rollNumber, cert);
         }
-        return acc;
-      }, []);
-    
-    // Merge registered students with certificate data
-    const studentsMap = new Map(registeredStudents.map(s => [s.rollNumber, s]));
-    certsByStudent.forEach(cert => {
-      if (studentsMap.has(cert.rollNumber)) {
-        const student = studentsMap.get(cert.rollNumber);
-        student.certificateIssued = true;
-        student.certificateCount = cert.certificateCount;
-      } else {
-        studentsMap.set(cert.rollNumber, cert);
-      }
-    });
-    
-    const allBatchStudents = Array.from(studentsMap.values())
-      .sort((a, b) => a.fullName.localeCompare(b.fullName));
-    
-    res.json(allBatchStudents);
+      });
+      
+      const allBatchStudents = Array.from(studentsMap.values())
+        .sort((a, b) => a.fullName.localeCompare(b.fullName));
+      
+      res.json(allBatchStudents);
+    } catch (err) {
+      console.error('Error fetching batch students:', err);
+      res.status(500).json({ message: 'Failed to fetch batch students', error: err instanceof Error ? err.message : 'Unknown error' });
+    }
   });
 
   // Get All Certificates (Admin)

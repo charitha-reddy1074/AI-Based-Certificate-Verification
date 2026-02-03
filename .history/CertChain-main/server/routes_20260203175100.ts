@@ -538,8 +538,8 @@ export async function registerRoutes(
   app.post(api.admin.blockUser.path, async (req, res) => {
     if (!req.isAuthenticated() || (req.user as any).role !== 'admin') return res.status(401).json({ message: "Unauthorized" });
     
-    const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const user = await (storage as any).getUserById(userId);
+    const userId = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+    const user = await storage.getUser(userId);
     
     if (!user) return res.status(404).json({ message: "User not found" });
     
@@ -564,8 +564,8 @@ export async function registerRoutes(
   app.post(api.admin.unblockUser.path, async (req, res) => {
     if (!req.isAuthenticated() || (req.user as any).role !== 'admin') return res.status(401).json({ message: "Unauthorized" });
     
-    const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const user = await (storage as any).getUserById(userId);
+    const userId = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+    const user = await storage.getUser(userId);
     
     if (!user) return res.status(404).json({ message: "User not found" });
     
@@ -627,7 +627,7 @@ export async function registerRoutes(
     // Get all certificates and group by student for the batch year
     const allCertificates = await storage.getAllCertificates();
     const certsByStudent = allCertificates
-      .filter(cert => cert.joiningYear === year.toString())
+      .filter(cert => parseInt(cert.joiningYear) === year)
       .reduce((acc: any[], cert) => {
         const existingStudent = acc.find(s => s.rollNumber === cert.rollNumber);
         if (!existingStudent) {

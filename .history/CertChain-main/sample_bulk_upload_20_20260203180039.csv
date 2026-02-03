@@ -1,0 +1,21 @@
+name,rollnumber,studentid,branch,university,joiningyear,passingyear,cgpa
+Rahul Sharma,CSE2101,101,CSE,Example University,2021,2023,8.5
+Priya Singh,CSE2102,102,CSE,Example University,2021,2023,9.2
+Arjun Patel,CSE2103,103,CSE,Example University,2021,2023,7.8
+Anjali Kumar,AI2104,104,AI&ML,Example University,2021,2023,8.9
+Deepak Verma,AI2105,105,AI&ML,Example University,2021,2023,8.1
+Neha Gupta,CS2106,106,CS,Example University,2021,2023,8.7
+Rohan Desai,IT2107,107,IT,Example University,2021,2023,7.9
+Shruti Nair,DS2108,108,DS,Example University,2021,2023,9.0
+Varun Joshi,IoT2109,109,IoT,Example University,2021,2023,8.3
+Pooja Reddy,CSE2201,110,CSE,Example University,2022,2024,8.6
+Nikhil Sharma,CSE2202,111,CSE,Example University,2022,2024,9.1
+Divya Iyer,AI2203,112,AI&ML,Example University,2022,2024,8.8
+Sameer Khan,CS2204,113,CS,Example University,2022,2024,7.7
+Isha Malhotra,IT2205,114,IT,Example University,2022,2024,8.4
+Karan Singh,DS2206,115,DS,Example University,2022,2024,8.9
+Ritika Jain,IoT2207,116,IoT,Example University,2022,2024,8.2
+Aditya Sinha,CSE2301,117,CSE,Example University,2023,2025,8.7
+Bhavna Desai,CSE2302,118,CSE,Example University,2023,2025,9.3
+Chetan Verma,AI2303,119,AI&ML,Example University,2023,2025,8.5
+Disha Patel,CS2304,120,CS,Example University,2023,2025,8.0
