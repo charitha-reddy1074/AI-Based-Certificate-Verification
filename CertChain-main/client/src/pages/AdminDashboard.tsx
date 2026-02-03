@@ -542,7 +542,7 @@ export default function AdminDashboard() {
                           <SelectTrigger className="bg-input border-input text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
                             <SelectValue placeholder="Select a branch" />
                           </SelectTrigger>
-                          <SelectContent className="bg-card border-border">
+                          <SelectContent className="!bg-white border border-gray-200 shadow-2xl">
                             <SelectItem value="CSE">CSE - Computer Science & Engineering</SelectItem>
                             <SelectItem value="AI&ML">AI&ML - Artificial Intelligence & Machine Learning</SelectItem>
                             <SelectItem value="CS">CS - Computer Science</SelectItem>
