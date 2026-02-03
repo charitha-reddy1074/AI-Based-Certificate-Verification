@@ -4,7 +4,7 @@ import { Pool } from "pg";
 import * as schema from "../shared/schema";
 import "dotenv/config";
 
-const dbUrl = process.env.DATABASE_URL || "mongodb+srv://charithareddy1074_db_user:12345678ch@cluster0.hgi5pa6.mongodb.net/";
+const dbUrl = process.env.DATABASE_URL || "mongodb+srv://charithareddy1074_db_user:12345678ch@cluster0.hgi5pa6.mongodb.net/certchain_db?retryWrites=true&w=majority";
 
 async function initializeDatabase() {
   const pool = new Pool({
