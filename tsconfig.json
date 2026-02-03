@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "useDefineForClassFields": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "forceConsistentCasingInFileNames": true,
+    "types": []
+  },
+  "include": ["CertChain-main/server/**/*", "CertChain-main/shared/**/*", "CertChain-main/scripts/**/*"],
+  "exclude": ["node_modules", "dist", "CertChain-main/client", "CertChain-main/node_modules"]
+}
