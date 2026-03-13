@@ -4,9 +4,9 @@
   "description": "Blockchain-based certificate verification system with biometric authentication",
   "main": "CertChain-main/dist/index.cjs",
   "scripts": {
-    "dev": "cd CertChain-main && npm run dev",
-    "build": "cd CertChain-main && npm ci --include=dev && npm run build",
-    "start": "cd CertChain-main && npm start",
+    "dev": "npm --prefix CertChain-main run dev",
+    "build": "npm --prefix CertChain-main ci --include=dev && npm --prefix CertChain-main run build",
+    "start": "npm --prefix CertChain-main start",
     "compile": "cd blockchain && hardhat compile",
     "test": "cd blockchain && hardhat test",
     "deploy": "cd blockchain && hardhat run scripts/deploy.js"
