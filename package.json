@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Blockchain-based certificate verification system with biometric authentication",
   "main": "CertChain-main/dist/index.cjs",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "npm --prefix CertChain-main run dev",
     "build": "npm --prefix CertChain-main ci --include=dev && npm --prefix CertChain-main run build",
