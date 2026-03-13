@@ -161,7 +161,7 @@ export async function generateCertificatePDF(cert: Certificate): Promise<Buffer>
 
       // QR Code and Blockchain Info
       const qrY = doc.y;
-      const appBaseUrl = (process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://web-production-32e05.up.railway.app").replace(/\/$/, "");
+      const appBaseUrl = (process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://ai-based-certificate-verification.onrender.com").replace(/\/$/, "");
       const qrData = `${appBaseUrl}/verify/${cert.id}`;
       
       QRCode.toDataURL(qrData, {
