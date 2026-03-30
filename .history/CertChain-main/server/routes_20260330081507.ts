@@ -463,7 +463,6 @@ export async function registerRoutes(
 
       const results: { uploaded: any[], failed: { row: number; error: string }[] } = { uploaded: [], failed: [] };
       const admin = req.user as any;
-      const uploadedCertificateData: any[] = []; // Store certificate data for HPCAE
 
       for (let i = 1; i < lines.length; i++) {
         try {
@@ -524,15 +523,6 @@ export async function registerRoutes(
           );
 
           results.uploaded.push(cert);
-          // Store certificate data for HPCAE analysis
-          uploadedCertificateData.push({
-            studentId: parseInt(row.studentid),
-            name: row.name,
-            rollNumber: row.rollnumber,
-            branch: row.branch,
-            course: row.course || undefined,
-            university: row.university
-          });
         } catch (err: any) {
           results.failed.push({ row: i + 1, error: err.message || 'Unknown error' });
         }
@@ -540,9 +530,8 @@ export async function registerRoutes(
 
       console.log(`✓ Bulk upload completed - ${results.uploaded.length} successful, ${results.failed.length} failed`);
 
-      // Generate and log HPCAE output for bulk upload with actual data
+      // Generate and log HPCAE output for bulk upload
       const hpcaeOutput = generateBulkUploadOutput(
-        uploadedCertificateData, // Pass actual certificate data
         lines.length - 1, // Total records (excluding header)
         results.uploaded.length,
         results.failed
